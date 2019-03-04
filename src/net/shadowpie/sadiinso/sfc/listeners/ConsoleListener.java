@@ -25,8 +25,13 @@ public final class ConsoleListener {
 					if(sc.hasNext()) {
 						CommandContext ctx = ConsoleCommandContext.getContext(sc.nextLine());
 						
-						if(ctx != null)
-							Commands.execute(ctx);
+						if(ctx != null) {
+							switch(Commands.execute(ctx)) {
+								case Commands.COMMAND_NOT_FOUND:
+									System.out.println("Command not found");
+									break;
+							}
+						}
 					}
 					
 					try {

@@ -1,8 +1,5 @@
 package net.shadowpie.sadiinso.sfc.sfc;
 
-import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
-import net.shadowpie.sadiinso.sfc.listeners.eventwaiter.EventWaiter;
-
 public class Main {
 
 	public static void main(String[] args) {
@@ -18,10 +15,6 @@ public class Main {
 	private static void launchAsStandAlone() {
 		System.out.println("Launching the library as a standalone bot...");
 		SFC.init();
-		
-		EventWaiter.attach(PrivateMessageReceivedEvent.class).onEvent(e -> {
-			/* miaou miaou */
-		}).subscribeEver();
 	}
 
 }
