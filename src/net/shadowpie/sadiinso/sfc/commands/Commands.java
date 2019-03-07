@@ -227,10 +227,6 @@ public final class Commands {
 	 * <li>Annotation declaration, using ASFCommand annotation on static
 	 * methods.</li>
 	 * </ul>
-	 * <p>
-	 * For non-static commands implementation, use
-	 * {@link Commands#addCommands(Object)}
-	 * <p>
 	 * 
 	 * @param clazz Class to scan for commands
 	 */

@@ -434,14 +434,14 @@ public abstract class CommandContext {
 	/**
 	 * Send a file to the channel
 	 * @param file The file to send
-	 * @param message The message to send
+	 * @param name The file name
 	 */
 	public abstract void sendFile(File file, String name);
 	
 	/**
 	 * Send a file to the channel
-	 * @param file The file name
-	 * @param message The file name
+	 * @param file The file to send
+	 * @param name The file name
 	 */
 	public abstract void sendFile(byte[] file, String name);
 	
@@ -454,7 +454,7 @@ public abstract class CommandContext {
 	/**
 	 * Send an image with a message to the channel
 	 * @param img The image to send
-	 * @param message The image name
+	 * @param name The image name
 	 */
 	public abstract void sendImage(RenderedImage img, String name);
 	

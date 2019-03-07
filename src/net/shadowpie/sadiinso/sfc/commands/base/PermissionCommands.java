@@ -32,7 +32,7 @@ public class PermissionCommands {
 	private static Object getTarget(CommandContext ctx, int paramNb) {
 		Guild guild = ctx.getGuild();
 		if (ctx.argc() < paramNb) {
-			ctx.warn("Certains paramètres sont manquants");
+			ctx.warn("Certains paramÃ¨tres sont manquants");
 			return null;
 		}
 
@@ -43,7 +43,7 @@ public class PermissionCommands {
 
 			List<Member> tmp = guild.getMembersByEffectiveName(ctx.arg(0), false);
 			if (tmp.size() > 1) {
-				ctx.warn("L'identifiant \"" + ctx.arg(0) + "\" correspond à plusieurs utilisateurs");
+				ctx.warn("L'identifiant \"" + ctx.arg(0) + "\" correspond Ã  plusieurs utilisateurs");
 				return null;
 			}
 
@@ -52,7 +52,7 @@ public class PermissionCommands {
 			} else { // check for role
 				List<Role> tmp2 = guild.getRolesByName(ctx.arg(0), false);
 				if (tmp2.size() > 1) {
-					ctx.warn("L'identifiant \"" + ctx.arg(0) + "\" correspond à plusieurs rôles");
+					ctx.warn("L'identifiant \"" + ctx.arg(0) + "\" correspond Ã  plusieurs rÃ´les");
 					return null;
 				}
 
@@ -101,7 +101,7 @@ public class PermissionCommands {
 			if(member.getUser().getIdLong() == ConfigHandler.owner_lid()) {
 				builder.addField(":cat::bread:", "", false);
 			} else if (member.isOwner()) {
-				builder.addField("Permissions spécifiques : ", "*", false);
+				builder.addField("Permissions spÃ©cifiques : ", "*", false);
 			} else {
 				Map<String, List<String>> perms = Permissions.getAll(guild.getIdLong(), member.getUser().getIdLong());
 				List<String> usrPerms = perms.remove(Permissions.permsListUsrKey);
@@ -113,7 +113,7 @@ public class PermissionCommands {
 						sb.append('\n');
 					}
 
-					builder.addField("Héritées du rôle \"" + entry.getKey() + "\" :", sb.toString(), true);
+					builder.addField("HÃ©ritÃ©es du rÃ´le \"" + entry.getKey() + "\" :", sb.toString(), true);
 					sb.setLength(0); // reset string builder
 				}
 
@@ -124,7 +124,7 @@ public class PermissionCommands {
 						sb.append('\n');
 					}
 
-					builder.addField("Permissions spécifiques : ", sb.toString(), false);
+					builder.addField("Permissions spÃ©cifiques : ", sb.toString(), false);
 				}
 			}
 
@@ -138,10 +138,10 @@ public class PermissionCommands {
 					sb.append('\n');
 				}
 			} else {
-				sb.append("Ce rôle n'octroie aucune permissions.");
+				sb.append("Ce rÃ´le n'octroie aucune permissions.");
 			}
 
-			builder.addField("Permissions du rôle \"" + role.getName() + "\"", sb.toString(), false);
+			builder.addField("Permissions du rÃ´le \"" + role.getName() + "\"", sb.toString(), false);
 			builder.setFooter("Role ID : " + role.getId(), null);
 		}
 
@@ -149,7 +149,7 @@ public class PermissionCommands {
 		ctx.reply(builder);
 	}
 
-	@ASFCommand(name = "grant", usage = "<user|role> <perm> [<perm2>...]", description = "Ajoute des permissions à l'utilisateur", allowFrom = "server", parentGroup = "perms", permissions = "perms.grant")
+	@ASFCommand(name = "grant", usage = "<user|role> <perm> [<perm2>...]", description = "Ajoute des permissions Ã  l'utilisateur", allowFrom = "server", parentGroup = "perms", permissions = "perms.grant")
 	public static void onPermGrant(CommandContext ctx) {
 		Object target = getTarget(ctx, 2);
 		if (target == null)
@@ -170,7 +170,7 @@ public class PermissionCommands {
 					ctx.error("Une erreur est survenue");
 					return;
 				case 3:
-					ctx.error("\"" + ctx.arg(t) + "\" ne définit pas une permission");
+					ctx.error("\"" + ctx.arg(t) + "\" ne dÃ©finit pas une permission");
 					return;
 				case 4:
 					ctx.error("La permission \"" + ctx.arg(t) + "\" n'existe pas");
@@ -179,14 +179,14 @@ public class PermissionCommands {
 		}
 
 		if (nb > 1)
-			ctx.info("Opération effectuée, " + nb + " permissions ont été mises à jour");
+			ctx.info("OpÃ©ration effectuÃ©e, " + nb + " permissions ont Ã©tÃ© mises Ã  jour");
 		else if (nb == 1)
-			ctx.info("Opération effectuée, une permission mise à jour");
+			ctx.info("OpÃ©ration effectuÃ©e, une permission mise Ã  jour");
 		else
-			ctx.info("Operétion effectuée, aucune permission mise à jour");
+			ctx.info("OpÃ©ration effectuÃ©e, aucune permission mise Ã  jour");
 	}
 
-	@ASFCommand(name = "revoke", usage = "<user|role> <perm> [<perm2>...]", description = "Retire des permissions à l'utilisateur", allowFrom = "server", parentGroup = "perms", permissions = "perms.revoke")
+	@ASFCommand(name = "revoke", usage = "<user|role> <perm> [<perm2>...]", description = "Retire des permissions Ã  l'utilisateur ciblÃ©", allowFrom = "server", parentGroup = "perms", permissions = "perms.revoke")
 	public static void onPermRemove(CommandContext ctx) {
 		Object target = getTarget(ctx, 2);
 		if (target == null)
@@ -207,7 +207,7 @@ public class PermissionCommands {
 					ctx.error("Une erreur est survenue");
 					return;
 				case 3:
-					ctx.error("\"" + ctx.arg(t) + "\" ne définit pas une permission");
+					ctx.error("\"" + ctx.arg(t) + "\" ne dÃ©finit pas une permission");
 					return;
 				case 4:
 					ctx.error("La permission \"" + ctx.arg(t) + "\" n'existe pas");
@@ -216,14 +216,14 @@ public class PermissionCommands {
 		}
 
 		if (nb > 1)
-			ctx.info("Opération effectuée, " + nb + " permissions ont été mises à jour");
+			ctx.info("OpÃ©ration effectuÃ©e, " + nb + " permissions ont Ã©tÃ© mises Ã  jour");
 		else if (nb == 1)
-			ctx.info("Opération effectuée, une permission mise à jour");
+			ctx.info("OpÃ©ration effectuÃ©e, une permission mise Ã  jour");
 		else
-			ctx.info("Operétion effectuée, aucune permission mise à jour");
+			ctx.info("OpÃ©ration effectuÃ©e, aucune permission mise Ã  jour");
 	}
 
-	@ASFCommand(name = "test", usage = "<user|role> <perm>", description = "Vérifie si l'utilisateur dispose de la permission donnée", allowFrom = "server", parentGroup = "perms")
+	@ASFCommand(name = "test", usage = "<user|role> <perm>", description = "VÃ©rifie si l'utilisateur dispose de la permission donnÃ©e", allowFrom = "server", parentGroup = "perms")
 	public static void onPermTest(CommandContext ctx) {
 		Object target = getTarget(ctx, 2);
 		if (target == null)

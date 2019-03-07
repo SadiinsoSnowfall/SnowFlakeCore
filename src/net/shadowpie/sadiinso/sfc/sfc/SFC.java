@@ -46,8 +46,6 @@ public class SFC {
 	
 	/**
 	 * Initialize all the components of the SnowFlakeCore and JDA libraries
-	 * 
-	 * @return SFC instance
 	 */
 	public static void init() {
 		init("config.json");
@@ -58,7 +56,6 @@ public class SFC {
 	 * libraries, permit to specify the configuration file
 	 * 
 	 * @param configFile Path to the configuration file of SnowFlakeCore
-	 * @return SFC instance
 	 */
 	public static void init(String configFile) {
 		logger.info("Initialing SnowFlakeCore library...");

@@ -21,6 +21,9 @@ import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemov
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.react.PrivateMessageReactionAddEvent;
 import net.dv8tion.jda.core.events.message.priv.react.PrivateMessageReactionRemoveEvent;
+import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
@@ -57,7 +60,7 @@ public class SFCListener extends ListenerAdapter {
 	/**
 	 * Add a custom handler to the specified event
 	 * 
-	 * @param type    The event type to handler
+	 * @param clazz   The event type
 	 * @param handler The handler to add
 	 */
 	public <T extends Event> void addEventHandler(Class<T> clazz, CustomEventHandler<T> handler) {
@@ -87,9 +90,33 @@ public class SFCListener extends ListenerAdapter {
 	
 	@Override
 	public void onGenericEvent(Event event) {
-		
 		// notify event waiter
 		EventWaiter.onEvent(event);
+		
+		// execute handlers
+		for (CustomEventHandler<Event> handler : getHandlers(Event.class))
+			handler.handle(event);
+	}
+	
+	@Override
+	public void onMessageReactionAdd(MessageReactionAddEvent event) {
+		// execute handlers
+		for (CustomEventHandler<MessageReactionAddEvent> handler : getHandlers(MessageReactionAddEvent.class))
+			handler.handle(event);
+	}
+	
+	@Override
+	public void onMessageReactionRemove(MessageReactionRemoveEvent event) {
+		// execute handlers
+		for (CustomEventHandler<MessageReactionRemoveEvent> handler : getHandlers(MessageReactionRemoveEvent.class))
+			handler.handle(event);
+	}
+	
+	@Override
+	public void onGenericMessageReaction(GenericMessageReactionEvent event) {
+		// execute handlers
+		for (CustomEventHandler<GenericMessageReactionEvent> handler : getHandlers(GenericMessageReactionEvent.class))
+			handler.handle(event);
 	}
 
 	// ################

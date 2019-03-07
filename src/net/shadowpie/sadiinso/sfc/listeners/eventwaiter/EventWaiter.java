@@ -15,8 +15,8 @@ import net.dv8tion.jda.core.events.Event;
 /**
  * EventWaiter class, used to subscribe to certains events under certains conditions
  * 
- * To subscribe to an event, you need to call {@link EventWaiter#attach(Clazz)} with the specified event class
- * This function will return you a {@link EWNodeBuilder} that will allow you to specify the actions to be taken
+ * To subscribe to an event, you need to call {@link #attach(Class) attach(Class)} with the specified event class
+ * This function will return you a {@link EventWaiter.EWNodeBuilder EWNodeBuilder} that will allow you to specify the actions to be taken
  *
  */
 public class EventWaiter {
@@ -60,38 +60,41 @@ public class EventWaiter {
 			return this;
 		}
 		
-		public EWNodeBuilder<T> onExpire(LongConsumer expireAction) {
-			this.expireAction = expireAction;
-			return this;
-		}
-		
 		public EWNodeBuilder<T> onEvent(Consumer<T> action) {
 			this.action = action;
 			return this;
 		}
 		
 		public EWNodeBuilder<T> timeout(long timeout) {
+			return timeout(timeout, null);
+		}
+		
+		public EWNodeBuilder<T> timeout(long timeout, LongConsumer expireAction) {
 			this.timeout = timeout;
+			this.expireAction = expireAction;
 			return this;
 		}
 		
-		public void subscribeOnce() {
-			subscribe(1);
+		public EWNode<T> subscribeOnce() {
+			return subscribe(1);
 		}
 		
-		public void subscribeEver() {
-			subscribe(-1);
+		public EWNode<T> subscribeEver() {
+			return subscribe(-1);
 		}
 		
 		@SuppressWarnings({ "unchecked", "rawtypes" })
-		public void subscribe(int runCount) {
+		public EWNode<T> subscribe(int runCount) {
 			List<EWNode> nodes = nodeMap.computeIfAbsent(clazz, e -> createList());
 			
 			if(action == null)
 				throw new RuntimeException("onEvent action cannot be null");
 			
 			Predicate<T>[] filters = (conditions.isEmpty() ? null : conditions.toArray(new Predicate[conditions.size()]));
-			nodes.add(new EWNode(filters, action, expireAction, runCount, timeout));
+			EWNode cnode = new EWNode(filters, action, expireAction, runCount, timeout);
+			nodes.add(cnode);
+			
+			return cnode;
 		}
 	}
 	
@@ -100,14 +103,14 @@ public class EventWaiter {
 		return Collections.synchronizedList(new ArrayList<EWNode>());
 	}
 	
-	private static class EWNode<T extends Event> {
-		public final Predicate<T>[] conditions;
-		public final Consumer<T> action;
-		public final LongConsumer expireAction;
-		public final long expire;
-		public int remainCall;
+	public static class EWNode<T extends Event> {
+		private final Predicate<T>[] conditions;
+		private final Consumer<T> action;
+		private final LongConsumer expireAction;
+		private long expire;
+		private int remainCall;
 		
-		public EWNode(Predicate<T>[] conditions, Consumer<T> action, LongConsumer expireAction, int runCount, long timeout) {
+		private EWNode(Predicate<T>[] conditions, Consumer<T> action, LongConsumer expireAction, int runCount, long timeout) {
 			this.conditions = conditions;
 			this.action = action;
 			this.expireAction = expireAction;
@@ -119,7 +122,7 @@ public class EventWaiter {
 				this.expire = System.currentTimeMillis() + timeout;
 		}
 		
-		public boolean expired(long currentTime) {
+		private boolean expired(long currentTime) {
 			if((expire <= currentTime) && (expire != -1)) {
 				expireAction.accept(currentTime);
 				return true;
@@ -128,7 +131,7 @@ public class EventWaiter {
 			return false;
 		}
 		
-		public boolean attempt(T event) {
+		private boolean attempt(T event) {
 			if(conditions != null)
 				for(Predicate<T> condition : conditions)
 					if(!condition.test(event))
@@ -142,6 +145,10 @@ public class EventWaiter {
 				--remainCall;
 				return (remainCall <= 0);
 			}
+		}
+		
+		public void unsubscribe() {
+			expire = 0;
 		}
 	}
 	

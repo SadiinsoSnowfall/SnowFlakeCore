@@ -8,9 +8,6 @@ import java.io.InputStream;
 
 import javax.imageio.ImageIO;
 
-import gnu.trove.map.TCharObjectMap;
-import gnu.trove.map.hash.TCharObjectHashMap;
-
 public class Utils {
 
 	// Suppresses default constructor, ensuring non-instantiability.
@@ -104,43 +101,6 @@ public class Utils {
 	 */
 	public static String colorToHex(Color color) {
 		return (color == null ? "null" : '#' + Integer.toHexString(color.getRGB()).substring(2).toUpperCase());
-	}
-
-	/*
-	 * map that contain the emote alphabet, the glyphs cannot be stored as a simple
-	 * char
-	 */
-	private static final TCharObjectMap<String> emoteAlphabet = new TCharObjectHashMap<>(26, 1, '#');
-	static {
-		String[] glyphs = new String[] { "🇦", "🇧", "🇨", "🇩", "🇪", "🇫", "🇬", "🇭", "🇮", "🇯", "🇰", "🇱", "🇲", "🇳", "🇴", "🇵", "🇶", "🇷", "🇸", "🇹",
-				"🇺", "🇻", "🇼", "🇽", "🇾", "🇿" };
-		char[] alphabet = "abcdefghijklmnopqrstuvwxyz".toCharArray();
-
-		for (int t = 0; t < alphabet.length; t++)
-			emoteAlphabet.put(alphabet[t], glyphs[t]);
-	}
-
-	/**
-	 * Convert a String to it's emote representation
-	 * 
-	 * @param str A string that contains only letters
-	 * @return The emote representation of the given string
-	 */
-	public static String strToEmote(String str) {
-		if (str.length() == 1)
-			return emoteAlphabet.get(str.charAt(0));
-
-		StringBuilder builder = new StringBuilder(str.length() * 3 - 1);
-		char[] chars = str.toCharArray();
-
-		for (int t = 0, len = chars.length - 1; t < chars.length; t++) {
-			builder.append(emoteAlphabet.get(chars[t]));
-
-			if (t < len)
-				builder.append(' ');
-		}
-
-		return builder.toString();
 	}
 
 	/**

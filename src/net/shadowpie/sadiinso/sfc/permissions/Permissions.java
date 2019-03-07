@@ -423,7 +423,7 @@ public class Permissions {
 	 * Return all permissions the given user have access to
 	 * @param serverid The server
 	 * @param userid The user
-	 * @return a HashMap object containing representing : roleName -> perms granted. (use #usr~ key to get user perms) or null if an error occured
+	 * @return a HashMap object containing representing the perms granted to each roles (use {@link #permsListUsrKey} key to get user perms) or null if an error occured
 	 */
 	public static Map<String, List<String>> getAll(long serverid, long userid) {		
 		Member member = JdaUtils.getMember(serverid, userid);

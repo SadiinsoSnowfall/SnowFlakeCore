@@ -11,6 +11,7 @@ import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
+import net.dv8tion.jda.core.entities.PrivateChannel;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
 import net.dv8tion.jda.core.requests.restaction.MessageAction;
@@ -21,6 +22,9 @@ import net.shadowpie.sadiinso.sfc.sfc.SFC;
  * Utility class for all function related to JDA or Discord in general
  */
 public class JdaUtils {
+	
+	public static final String EMOJI_ACCEPT = "✅";
+	public static final String EMOJI_DENY = "❌";
 	
 	static enum MsgTheme {
 		Info, Warn, Error;
@@ -64,8 +68,8 @@ public class JdaUtils {
 		EmbedBuilder builder = new EmbedBuilder();
 		builder.setColor(color);
 
-		if ((sub == null) || !sub.isEmpty())
-			builder.setTitle(message);
+		if ((sub == null) || sub.isEmpty())
+			builder.setAuthor(message);
 		else
 			builder.addField(message, sub, false);
 
@@ -95,6 +99,19 @@ public class JdaUtils {
 		return msg;
 	}
 
+	public static PrivateChannel getPrivateChannel(User user) {
+		return user.openPrivateChannel().complete();
+	}
+	
+	public static PrivateChannel getPrivateChannel(Member member) {
+		return member.getUser().openPrivateChannel().complete();
+	}
+	
+	public static PrivateChannel getPrivateChannel(long userid) {
+		User user = getUser(userid);
+		return (user == null ? null : user.openPrivateChannel().complete());
+	}
+	
 	/**
 	 * Send a private message to the given user
 	 * @param user The user
