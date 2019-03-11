@@ -1,17 +1,19 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
-public class SDoubleQueue {
+import java.util.Iterator;
+
+public class SDoubleCyclicQueue implements Iterable<Double> {
 
 	private final double[] cache;
 	private int head;
 	private int size;
 	private int tail;
 
-	public SDoubleQueue() {
+	public SDoubleCyclicQueue() {
 		this(32);
 	}
 
-	public SDoubleQueue(int size) {
+	public SDoubleCyclicQueue(int size) {
 		if(((size & (size - 1)) > 0) || (size <= 0))
 			throw new RuntimeException("Invalid size (must be a power of 2)");
 		
@@ -19,7 +21,7 @@ public class SDoubleQueue {
 		this.size = this.tail = this.head = 0;
 	}
 
-	public SDoubleQueue(double... values) {
+	public SDoubleCyclicQueue(double... values) {
 		if((values.length & (values.length - 1)) > 0)
 			throw new RuntimeException("Invalid size (must be a power of 2)");
 		
@@ -182,6 +184,11 @@ public class SDoubleQueue {
 		--size;
 		return tmp;
 	}
+	
+	@Override
+	public Iterator<Double> iterator() {
+		return new SDoubleQueueIterator(this);
+	}
 
 	@Override
 	public String toString() {
@@ -202,6 +209,28 @@ public class SDoubleQueue {
 		builder.append(']');
 		
 		return builder.toString();
+	}
+	
+	public static class SDoubleQueueIterator implements Iterator<Double> {
+		private int index;
+		private SDoubleCyclicQueue queue;
+		
+		public SDoubleQueueIterator(SDoubleCyclicQueue queue) {
+			this.queue = queue;
+			this.index = queue.tail - 1;
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return (index != queue.head);
+		}
+
+		@Override
+		public Double next() {
+			index = queue.imod(index);
+			return queue.cache[index];
+		}
+		
 	}
 	
 }

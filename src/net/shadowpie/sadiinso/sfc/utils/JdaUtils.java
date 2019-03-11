@@ -3,8 +3,6 @@ package net.shadowpie.sadiinso.sfc.utils;
 import java.awt.Color;
 import java.io.File;
 
-import org.json.JSONObject;
-
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.MessageBuilder;
 import net.dv8tion.jda.core.entities.Guild;
@@ -25,10 +23,6 @@ public class JdaUtils {
 	
 	public static final String EMOJI_ACCEPT = "✅";
 	public static final String EMOJI_DENY = "❌";
-	
-	static enum MsgTheme {
-		Info, Warn, Error;
-	}
 	
 	public static EmbedBuilder getEmbedBuilder() {
 		return getEmbedBuilder(null, ConfigHandler.color_theme());
@@ -317,22 +311,4 @@ public class JdaUtils {
 		return (member != null ? member.getRoles().stream().mapToLong(r -> r.getIdLong()).toArray() : null);
 	}
 	
-	/**
-	 * Generate a JSONObject that contains some informations about the given guild
-	 * @param guild The guild
-	 */
-	public static JSONObject guildToJSON(Guild guild) {
-		if(guild == null)
-			return null;
-		
-		JSONObject res = new JSONObject();
-		res.put("id", guild.getId());
-		res.put("name", guild.getName());
-		res.put("icon", guild.getIconUrl());
-		res.put("owner", getInviteCode(guild.getOwner()));
-		res.put("member-nb", guild.getMembers().size());
-		res.put("date", guild.getCreationTime().toEpochSecond());
-		
-		return res;
-	}
 }

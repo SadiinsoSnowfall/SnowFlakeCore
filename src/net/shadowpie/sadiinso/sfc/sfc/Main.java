@@ -15,6 +15,16 @@ public class Main {
 	private static void launchAsStandAlone() {
 		System.out.println("Launching the library as a standalone bot...");
 		SFC.init();
+		
+		
+		/**
+		var chan = JdaUtils.getPrivateChannel(233189013131886592L);
+		ButtonMenu.create("miaou ?", "chamallow").addChoice(JdaUtils.EMOJI_ACCEPT, r -> {
+			r.getChannel().sendMessage("accepted").queue();
+		}).addChoice(JdaUtils.EMOJI_DENY, r -> {
+			r.getChannel().sendMessage("denied").queue();
+		}).build().display(chan);
+		**/
 	}
 
 }

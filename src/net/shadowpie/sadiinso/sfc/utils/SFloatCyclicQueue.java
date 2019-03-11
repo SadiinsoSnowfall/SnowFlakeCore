@@ -1,17 +1,19 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
-public class SFloatQueue {
+import java.util.Iterator;
+
+public class SFloatCyclicQueue implements Iterable<Float> {
 
 	private final float[] cache;
 	private int head;
 	private int size;
 	private int tail;
 
-	public SFloatQueue() {
+	public SFloatCyclicQueue() {
 		this(32);
 	}
-
-	public SFloatQueue(int size) {
+	
+	public SFloatCyclicQueue(int size) {
 		if(((size & (size - 1)) > 0) || (size <= 0))
 			throw new RuntimeException("Invalid size (must be a power of 2)");
 		
@@ -19,7 +21,7 @@ public class SFloatQueue {
 		this.size = this.tail = this.head = 0;
 	}
 
-	public SFloatQueue(float... values) {
+	public SFloatCyclicQueue(float... values) {
 		if((values.length & (values.length - 1)) > 0)
 			throw new RuntimeException("Invalid size (must be a power of 2)");
 		
@@ -163,6 +165,11 @@ public class SFloatQueue {
 	}
 
 	@Override
+	public Iterator<Float> iterator() {
+		return new SFloatQueueIterator(this);
+	}
+	
+	@Override
 	public String toString() {
 		if(size == 0)
 			return "[]";
@@ -181,6 +188,28 @@ public class SFloatQueue {
 		builder.append(']');
 		
 		return builder.toString();
+	}
+	
+	public static class SFloatQueueIterator implements Iterator<Float> {
+		private int index;
+		private SFloatCyclicQueue queue;
+		
+		public SFloatQueueIterator(SFloatCyclicQueue queue) {
+			this.queue = queue;
+			this.index = queue.tail - 1;
+		}
+		
+		@Override
+		public boolean hasNext() {
+			return (index != queue.head);
+		}
+
+		@Override
+		public Float next() {
+			index = queue.imod(index);
+			return queue.cache[index];
+		}
+		
 	}
 	
 }

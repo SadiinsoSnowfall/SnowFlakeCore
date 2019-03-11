@@ -113,7 +113,7 @@ public class PermissionCommands {
 						sb.append('\n');
 					}
 
-					builder.addField("Héritées du rôle \"" + entry.getKey() + "\" :", sb.toString(), true);
+					builder.addField("Héritées du rôle \"" + entry.getKey() + "\" : ", sb.toString(), true);
 					sb.setLength(0); // reset string builder
 				}
 

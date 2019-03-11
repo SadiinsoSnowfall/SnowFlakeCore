@@ -7,6 +7,9 @@ import java.lang.reflect.Method;
 
 import org.json.JSONObject;
 
+/**
+ * Utility class for creating a lambda from a endpoint function
+ */
 public class WebEndpointHandler {
 
 	@FunctionalInterface

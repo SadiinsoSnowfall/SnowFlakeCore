@@ -5,13 +5,39 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.DecimalFormat;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
-public class Utils {
+import net.dv8tion.jda.core.EmbedBuilder;
 
+public class Utils {
+	
+	private static final DecimalFormat df = new DecimalFormat();
+	static {
+		df.setGroupingSize(3);
+		df.setMaximumFractionDigits(2);
+	}
+	
 	// Suppresses default constructor, ensuring non-instantiability.
 	private Utils() {}
+	
+	/**
+	 * Redeclared here because {@link EmbedBuilder#ZERO_WIDTH_SPACE} is a String, not a char
+	 */
+	public static final char ZERO_WIDTH_SPACE = '​';
+	
+	/**
+	 * Format a number to be more human readable
+	 * <br>
+	 * Example : <strong>123456.789</strong> will became <strong>123 456.78</strong>
+	 * @param number The number to format
+	 * @return A string representing the formatted number
+	 */
+	public static String formatNumber(Number number) {
+		return df.format(number);
+	}
 	
 	/**
 	 * Split a string at the last occurence of the given separator
@@ -166,6 +192,110 @@ public class Utils {
 	 */
 	public static InputStream getRessource(String name) {
 		return Utils.class.getResourceAsStream(name);
+	}
+	
+	/**
+	 * Format a list of strings into columns (ensure compatibility with discord by inserting zero-space-width between normal spaces)
+	 * @param strs The strings to format
+	 * @param maxColSize The maximum column size (number of strings per column)
+	 * @param spacing The spacing between columns
+	 * @return The formatted String
+	 */
+	public static String snapFormat(List<String> strs, int maxColSize, int spacing) {
+		return Utils.snapFormat(strs.toArray(String[]::new), maxColSize, spacing);
+	}
+	
+	/**
+	 * Format an array of strings into columns (ensure compatibility with discord by inserting zero-space-width between normal spaces)
+	 * @param strs The strings to format
+	 * @param maxColSize The maximum column size (number of strings per column)
+	 * @param spacing The spacing between columns
+	 * @return The formatted String
+	 */
+	public static String snapFormat(String[] strs, int maxColSize, int spacing) {
+		// only one column
+		if(strs.length <= maxColSize) {
+			int end = strs.length - 1;
+			StringBuilder sb = new StringBuilder(strs.length << 2);
+			
+			for(int t = 0; t < end; t++) {
+				sb.append(strs[t]);
+				sb.append('\n');
+			}
+			
+			sb.append(strs[end]);
+			return sb.toString();
+		}
+		
+		// multiples columns
+		int lastCol = strs.length % maxColSize;
+		if(lastCol == 0)
+			lastCol = maxColSize;
+		
+		// init padding
+		int maxPad = 0;
+		for(int t = 0; t < strs.length; t++)
+			if(strs[t].length() > maxPad)
+				maxPad = strs[t].length();
+		char[] pad = new char[(maxPad + spacing) * 2];
+		for(int t = 0; t < pad.length; t += 2) {
+			pad[t] = ' ';
+			pad[t + 1] = ZERO_WIDTH_SPACE;
+		}
+		
+		// init lines builders
+		StringBuilder[] lines = new StringBuilder[maxColSize];
+		for(int t = 0; t < lines.length; t++)
+			lines[t] = new StringBuilder(maxPad * (strs.length / maxColSize));
+		
+		// compute lines
+		for(int t = 0; t < strs.length - lastCol; t += maxColSize) {
+			int padding = 0;
+			int end = t + maxColSize;
+			
+			for(int u = t; u < end; u++)
+				if(strs[u].length() > padding)
+					padding = strs[u].length();
+			padding += spacing;
+			
+			int index, curPad;
+			for(int u = t; u < end; u++) {
+				index = u % maxColSize;
+				curPad = padding - strs[u].length();
+				
+				lines[index].append(strs[u]);
+				
+				if(curPad > 0)
+					lines[index].append(pad, 0, curPad * 2);
+			}
+		}
+		
+		// add last column
+		for(int t = strs.length - lastCol; t < strs.length; t++)
+			lines[t % maxColSize].append(strs[t]);
+		
+		// build final string
+		StringBuilder sb = new StringBuilder(64);
+		for(int t = 0; t < lines.length - 1; t++) {
+			sb.append(lines[t]);
+			sb.append('\n');
+		}
+		
+		sb.append(lines[lines.length - 1]);
+		return sb.toString();
+	}
+	
+	/**
+	 * Add ``` chars at the begining and the end of the string
+	 * @param str The string
+	 * @return A string
+	 */
+	public static String monospace(String str) {
+		StringBuilder sb = new StringBuilder(str.length() + 7);
+		sb.append("```\n");
+		sb.append(str);
+		sb.append("```");
+		return sb.toString();
 	}
 
 }

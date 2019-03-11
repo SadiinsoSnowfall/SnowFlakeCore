@@ -6,6 +6,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import gnu.trove.list.array.TIntArrayList;
@@ -60,7 +61,7 @@ public abstract class CommandContext {
 	 * Return the current first command argument (AKA prefix)
 	 */
 	public String prefix() {
-		return (args.length > 0 ? args[0] : "");
+		return (args.length > 0 ? args[0] : StringUtils.EMPTY);
 	}
 	
 	/**

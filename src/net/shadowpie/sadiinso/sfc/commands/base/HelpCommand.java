@@ -12,6 +12,7 @@ import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.GroupedCommandHandler;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
+import net.shadowpie.sadiinso.sfc.utils.Utils;
 
 public final class HelpCommand {
 
@@ -57,13 +58,13 @@ public final class HelpCommand {
 				}
 				
 				EmbedBuilder embed = JdaUtils.getEmbedBuilder();
-				embed.addField("Groupe \"" + path + "\"", monospace(handler.description), false);
+				embed.addField("Groupe \"" + path + "\"", Utils.monospace(handler.description), false);
 				
 				Collections.sort(commands);
-				if(commands.size() > 0)embed.addField("Commandes :", monospace(snapFormat(commands, 7, 2)), true);
+				if(commands.size() > 0)embed.addField("Commandes :", Utils.monospace(Utils.snapFormat(commands, 7, 2)), true);
 				
 				Collections.sort(groups);
-				if(groups.size() > 0)embed.addField("Groupes :", monospace(snapFormat(groups, 7, 2)), true);
+				if(groups.size() > 0)embed.addField("Groupes :", Utils.monospace(Utils.snapFormat(groups, 7, 2)), true);
 				
 				ctx.reply(embed);
 				
@@ -76,7 +77,7 @@ public final class HelpCommand {
 				
 				if(handler.computedUsage != null) {
 					embed = JdaUtils.getEmbedBuilder("Commande \"" + path + "\"" + alias);
-					embed.addField(monospace(handler.computedUsage), handler.description, false);
+					embed.addField(Utils.monospace(handler.computedUsage), handler.description, false);
 				} else {
 					embed = JdaUtils.getEmbedBuilder();
 					embed.addField("Commande \"" + path + "\"" + alias, handler.description, false);
@@ -103,95 +104,12 @@ public final class HelpCommand {
 		}
 		
 		Collections.sort(commands);
-		if(commands.size() > 0) embed.addField("Commandes :", monospace(snapFormat(commands, 7, 2)), true);
+		if(commands.size() > 0) embed.addField("Commandes :", Utils.monospace(Utils.snapFormat(commands, 7, 2)), true);
 		
 		Collections.sort(groups);
-		if(groups.size() > 0)embed.addField("Groupes :", monospace(snapFormat(groups, 7, 2)), true);
+		if(groups.size() > 0) embed.addField("Groupes :", Utils.monospace(Utils.snapFormat(groups, 7, 2)), true);
 		
 		ctx.reply(embed);
-	}
-
-	private static String monospace(String str) {
-		StringBuilder sb = new StringBuilder(str.length() + 6);
-		sb.append("```");
-		sb.append(str);
-		sb.append("```");
-		return sb.toString();
-	}
-	
-	private static String snapFormat(List<String> strs, int maxColSize, int spacing) {
-		String[] arr = strs.toArray(new String[strs.size()]);
-		
-		// only one column
-		if(strs.size() <= maxColSize) {
-			int end = arr.length - 1;
-			StringBuilder sb = new StringBuilder(strs.size() << 2);
-			
-			for(int t = 0; t < end; t++) {
-				sb.append(arr[t]);
-				sb.append('\n');
-			}
-			
-			sb.append(arr[end]);
-			return sb.toString();
-		}
-		
-		// multiples columns
-		int lastCol = arr.length % maxColSize;
-		if(lastCol == 0)
-			lastCol = maxColSize;
-		
-		// init padding
-		int maxPad = 0;
-		for(int t = 0; t < arr.length; t++)
-			if(arr[t].length() > maxPad)
-				maxPad = arr[t].length();
-		char[] pad = new char[(maxPad + spacing) * 2];
-		for(int t = 0; t < pad.length; t += 2) {
-			pad[t] = ' ';
-			pad[t + 1] = '​';// zero width space
-		}
-		
-		// init lines builders
-		StringBuilder[] lines = new StringBuilder[maxColSize];
-		for(int t = 0; t < lines.length; t++)
-			lines[t] = new StringBuilder(maxPad * (arr.length / maxColSize));
-		
-		// compute lines
-		for(int t = 0; t < arr.length - lastCol; t += maxColSize) {
-			int padding = 0;
-			int end = t + maxColSize;
-			
-			for(int u = t; u < end; u++)
-				if(arr[u].length() > padding)
-					padding = arr[u].length();
-			padding += spacing;
-			
-			int index, curPad;
-			for(int u = t; u < end; u++) {
-				index = u % maxColSize;
-				curPad = padding - arr[u].length();
-				
-				lines[index].append(arr[u]);
-				
-				if(curPad > 0)
-					lines[index].append(pad, 0, curPad * 2);
-			}
-		}
-		
-		// add last column
-		for(int t = arr.length - lastCol; t < arr.length; t++)
-			lines[t % maxColSize].append(arr[t]);
-		
-		// build final string
-		StringBuilder sb = new StringBuilder(64);
-		for(int t = 0; t < lines.length - 1; t++) {
-			sb.append(lines[t]);
-			sb.append('\n');
-		}
-		
-		sb.append(lines[lines.length - 1]);
-		return sb.toString();
 	}
 	
 }

@@ -1,5 +1,0 @@
-[+] Allow to attach an event handler to the root Event class
-[+] Added a ButtonMenu unility to allow creation of reaction based menus
-[x] Fixed a bug where JdaUtils#sendAsEmbed would not send the "sub" parameter in the embed message
-[o] Modified the "stop" base command to use the new ButtonMenu utility
-[o] Fixed JavaDoc comments for various entities

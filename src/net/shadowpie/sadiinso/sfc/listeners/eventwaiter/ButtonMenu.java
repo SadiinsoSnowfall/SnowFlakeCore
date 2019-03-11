@@ -61,9 +61,7 @@ public class ButtonMenu extends AbstractMenu {
     /**
      * Create a new {@link ButtonMenu.Builder} with the specified title
      * 
-     * @param title
-     * 			The ButtonMenu title
-     * 
+     * @param title The ButtonMenu title
      * @return The {@link ButtonMenu.Builder}
      */
     public static ButtonMenu.Builder create(String title) {
@@ -73,11 +71,8 @@ public class ButtonMenu extends AbstractMenu {
     /**
      * Create a new {@link ButtonMenu.Builder} with the specified title and description
      * 
-     * @param title
-     * 			The ButtonMenu title
-     * 
-     * @param description
-     * 			The ButtonMenu description
+     * @param title The ButtonMenu title
+     * @param description The ButtonMenu description
      * 
      * @return The {@link ButtonMenu.Builder}
      */
@@ -98,8 +93,7 @@ public class ButtonMenu extends AbstractMenu {
      * Shows the ButtonMenu as a new {@link net.dv8tion.jda.core.entities.Message Message} 
      * in the provided {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel}.
      * 
-     * @param  channel
-     *         The MessageChannel to send the new Message to
+     * @param channel The MessageChannel to send the new Message to
      */
     @Override
     public void display(MessageChannel channel) {
@@ -113,8 +107,7 @@ public class ButtonMenu extends AbstractMenu {
     /**
      * Displays this ButtonMenu by editing the provided {@link net.dv8tion.jda.core.entities.Message Message}.
      * 
-     * @param  message
-     *         The Message to display the Menu in
+     * @param message The Message to display the Menu in
      */
     @Override
     public void display(Message message) {
@@ -166,9 +159,13 @@ public class ButtonMenu extends AbstractMenu {
                             	return false;
                             }
 
-                            // Last check is that the person who added the reaction
-                            // is a valid user.
-                            return isValidUser(event.getUser(), event.getGuild());
+                            // check if the user is valid
+                            if(!isValidUser(event.getUser(), event.getGuild())) {
+                            	event.getReaction().removeReaction().queue();
+                            	return false;
+                            }
+                            
+                            return true;
                         }).onEvent((GenericMessageReactionEvent event) -> {
                             // What happens next is after a valid event
                             // is fired and processed above.
@@ -283,9 +280,7 @@ public class ButtonMenu extends AbstractMenu {
         /**
          * Sets the {@link java.awt.Color Color} of the {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed}.
          *
-         * @param  color
-         *         The Color of the MessageEmbed
-         *
+         * @param color The Color of the MessageEmbed
          * @return This builder
          */
         public Builder setColor(Color color) {
@@ -299,9 +294,7 @@ public class ButtonMenu extends AbstractMenu {
          *
          * <p>This is displayed directly above the embed.
          *
-         * @param  text
-         *         The Message content to be displayed above the embed when the ButtonMenu is built
-         *
+         * @param text The Message content to be displayed above the embed when the ButtonMenu is built
          * @return This builder
          */
         public Builder setText(String text) {
@@ -313,9 +306,7 @@ public class ButtonMenu extends AbstractMenu {
          * Sets the description to be placed in an {@link net.dv8tion.jda.core.entities.MessageEmbed MessageEmbed}.
          * <br>If this is {@code null}, no MessageEmbed will be displayed
          *
-         * @param  description
-         *         The content of the MessageEmbed's description
-         *
+         * @param description The content of the MessageEmbed's description
          * @return This builder
          */
         public Builder setDescription(String description) {
@@ -326,9 +317,7 @@ public class ButtonMenu extends AbstractMenu {
         /**
          * Sets the {@link java.util.function.Consumer Consumer} action to perform upon selecting a button.
          *
-         * @param  action
-         *         The Consumer action to perform upon selecting a button
-         *
+         * @param action The Consumer action to perform upon selecting a button
          * @return This builder
          */
         public Builder setAction(Consumer<MessageReaction> action) {
@@ -339,12 +328,8 @@ public class ButtonMenu extends AbstractMenu {
         /**
          * Sets the {@link java.util.function.Consumer Consumer} actions to perform upon selecting a button.
          *
-         * @param  onAdd
-         *         The Consumer action to perform upon selecting a button
-         *
-         * @param  onRemove
-         *         The Consumer action to perform upon deselecting a button
-         *         
+         * @param onAdd The Consumer action to perform upon selecting a button
+         * @param onRemove The Consumer action to perform upon deselecting a button
          * @return This builder
          */
         public Builder setAction(Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove) {
@@ -359,9 +344,7 @@ public class ButtonMenu extends AbstractMenu {
          *
          * This accepts the message used to display the menu when called.
          *
-         * @param  finalAction
-         *         The Runnable action to perform if the ButtonMenu is done
-         *
+         * @param finalAction The Runnable action to perform if the ButtonMenu is done
          * @return This builder
          */
         public Builder setFinalAction(BiConsumer<Long, Message> finalAction) {
@@ -376,9 +359,7 @@ public class ButtonMenu extends AbstractMenu {
          * added using {@link ButtonMenu.Builder#addChoice(Emote...)
          * ButtonMenu.Builder#addChoice(Emote...)}.
          *
-         * @param  emojis
-         *         The String unicode emojis to add
-         *
+         * @param  emojis The String unicode emojis to add
          * @return This builder
          */
         public Builder addChoice(String... emojis) {
@@ -394,12 +375,8 @@ public class ButtonMenu extends AbstractMenu {
          * added using {@link ButtonMenu.Builder#addChoice(Emote...)
          * ButtonMenu.Builder#addChoice(Emote...)}.
          *
-         * @param emoji
-         *         The String unicode emojis to add
-         *        
-         * @param action
-         * 		   The code to run when this button is clicked
-         *
+         * @param emoji The String unicode emojis to add  
+         * @param action The code to run when this button is clicked
          * @return This builder
          */
         public Builder addChoice(String emoji, Consumer<MessageReaction> action) {
@@ -437,9 +414,7 @@ public class ButtonMenu extends AbstractMenu {
          * ButtonMenu.Builder#addChoice(String...)
          * ButtonMenu.Builder#addChoice(String...)}.
          *
-         * @param  emotes
-         *         The Emote objects to add
-         *
+         * @param emotes The Emote objects to add
          * @return This builder
          */
         public Builder addChoice(Emote... emotes) {
@@ -455,12 +430,8 @@ public class ButtonMenu extends AbstractMenu {
          * ButtonMenu.Builder#addChoice(String...)
          * ButtonMenu.Builder#addChoice(String...)}.
          *
-         * @param emote
-         *         The Emote objects to add
-         *        
-         * @param action
-         * 		   The code to run when this button is clicked
-         *
+         * @param emote The Emote objects to add      
+         * @param action The code to run when this button is clicked
          * @return This builder
          */
         public Builder addChoice(Emote emote, Consumer<MessageReaction> action) {
@@ -475,15 +446,9 @@ public class ButtonMenu extends AbstractMenu {
          * ButtonMenu.Builder#addChoice(String...)
          * ButtonMenu.Builder#addChoice(String...)}.
          *
-         * @param emote
-         *         The Emote objects to add
-         *        
-         * @param onAdd
-         * 		   The code to run when this button is selected
-         *
-         * @param onRemove
-         * 	       The code to run when this button is deselected
-         *
+         * @param emote The Emote objects to add   
+         * @param onAdd The code to run when this button is selected
+         * @param onRemove The code to run when this button is deselected
          * @return This builder
          */
         public Builder addChoice(Emote emote, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove) {

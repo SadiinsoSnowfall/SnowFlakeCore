@@ -24,7 +24,6 @@ import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.permissions.Permissions;
-import net.shadowpie.sadiinso.sfc.sfc.OwnerSession;
 import net.shadowpie.sadiinso.sfc.utils.Utils;
 
 public final class Commands {
@@ -95,8 +94,8 @@ public final class Commands {
 		byte perms = handler.basePerms;
 
 		// check base permissions
-		if (OriginPerms.has(perms, OriginPerms.PERM_OWNER_ONLY) && OwnerSession.isOwner(ctx.getAuthorIdLong())) {
-			return COMMAND_PERM_ERROR;
+		if (OriginPerms.has(perms, OriginPerms.PERM_OWNER_ONLY) && (ctx.getAuthorIdLong() != ConfigHandler.owner_lid()) && (origin != ContextOrigin.CONSOLE)) {
+			return COMMAND_NOT_FOUND;
 		}
 
 		// verify origin permissions

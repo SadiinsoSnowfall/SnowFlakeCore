@@ -16,11 +16,10 @@ import org.slf4j.Logger;
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
-import net.shadowpie.sadiinso.sfc.webapi.base.BaseEndpoints;
 
 public class WebAPI {
 
-	private static final Logger logger = JDALogger.getLog("WebAPI");
+	private static Logger logger;
 
 	private static ServerSocket server;
 	private static Thread serverThread;
@@ -35,6 +34,8 @@ public class WebAPI {
 		if(!enabled)
 			return;
 		
+		logger = JDALogger.getLog("WebAPI");
+		
 		logger.info("Initialing socket server...");
 		String ip = cfg.getString("address", "localhost");
 		int port = cfg.getInt("port", -1);
@@ -47,9 +48,6 @@ public class WebAPI {
 			logger.error("Error while creating the socket server (port=" + port + ")", e);
 			return;
 		}
-
-		// configure basics endpoints
-		WebEndpoints.addHandlers(BaseEndpoints.class);
 
 		serverThread = new Thread(new Runnable() {
 			@Override
