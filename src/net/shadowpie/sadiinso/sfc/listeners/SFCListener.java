@@ -13,6 +13,8 @@ import net.dv8tion.jda.core.events.guild.GuildUnbanEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
 import net.dv8tion.jda.core.events.guild.member.GuildMemberNickChangeEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
+import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageUpdateEvent;
@@ -259,7 +261,25 @@ public class SFCListener extends ListenerAdapter {
 	public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
 		// execute handlers
 		for (CustomEventHandler<GuildMessageReactionRemoveEvent> handler : getHandlers(GuildMessageReactionRemoveEvent.class))
-				handler.handle(event);
+			handler.handle(event);
 	}
-
+	
+	// ##############
+	// GUILD CHANNELS
+	// ##############
+	
+	@Override
+	public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
+		// execute handlers
+		for (CustomEventHandler<GuildVoiceJoinEvent> handler : getHandlers(GuildVoiceJoinEvent.class))
+			handler.handle(event);
+	}
+	
+	@Override
+	public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
+		// execute handlers
+		for (CustomEventHandler<GuildVoiceLeaveEvent> handler : getHandlers(GuildVoiceLeaveEvent.class))
+			handler.handle(event);
+	}
+	
 }

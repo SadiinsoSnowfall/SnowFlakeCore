@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
-import net.shadowpie.sadiinso.sfc.commands.declaration.ASFCommand;
-import net.shadowpie.sadiinso.sfc.commands.declaration.ASFCommandHelper;
+import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
+import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommandHelper;
 import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandLambdaHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
@@ -126,7 +126,11 @@ public final class Commands {
 			}
 		}
 
-		return handler.execute(ctx.pullPrefix());
+		int code = handler.execute(ctx.pullPrefix());
+		if(code == COMMAND_ERROR)
+			ctx.notifyFailure();
+		
+		return code;
 	}
 
 	/**
@@ -192,7 +196,20 @@ public final class Commands {
 		else
 			return null;
 	}
-
+	
+	/**
+	 * Register a command group
+	 * <br>
+	 * This group will have the defaults origin permissions settings "private/server"
+	 * 
+	 * @param path        The group path
+	 * @param description The group description
+	 * @see #registerCommandGroup(String, String, String) registerCommandGroup(String path, String description, String allowFrom)
+	 */
+	public static void registerCommandGroup(String path, String description) {
+		registerCommandGroup(path, description, "private/server");
+	}
+	
 	/**
 	 * Register a command group
 	 * 
@@ -223,7 +240,7 @@ public final class Commands {
 	 * <p>
 	 * Specified class can contains the specified commands declaration pattern :
 	 * <ul>
-	 * <li>Annotation declaration, using ASFCommand annotation on static
+	 * <li>Annotation declaration, using SFCommand annotation on static
 	 * methods.</li>
 	 * </ul>
 	 * 
@@ -269,16 +286,16 @@ public final class Commands {
 			}
 		});
 
-		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(ASFCommandHelper.class) && Modifier.isStatic(m.getModifiers()))).forEach(m -> {
+		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(SFCommandHelper.class) && Modifier.isStatic(m.getModifiers()))).forEach(m -> {
 			try {
 				m.invoke(null, (Object[]) null);
 			} catch (Exception e) {
-				logger.error("Command helper execution at \"" + m.getName() + "\"", e);
+				logger.error("Command helper execution at \"" + m.getName() + "\" of \"" + clazz.getName() + "\"", e);
 				return;
 			}
 		});
 
-		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(ASFCommand.class) && Modifier.isStatic(m.getModifiers())))
+		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(SFCommand.class) && Modifier.isStatic(m.getModifiers())))
 				.forEach(m -> addASFCommandInternal(m, null));
 	}
 
@@ -291,10 +308,10 @@ public final class Commands {
 	 * command call will be optimized with a lambda call
 	 * <p>
 	 * 
-	 * @param m method that has ASFCommand annotation.
+	 * @param m method that has SFCommand annotation.
 	 */
 	private static void addASFCommandInternal(Method m, Object target) {
-		ASFCommand a = m.getAnnotation(ASFCommand.class);
+		SFCommand a = m.getAnnotation(SFCommand.class);
 		AbstractCommandHandler handler = null;
 
 		// parse and register permissions

@@ -3,6 +3,7 @@ package net.shadowpie.sadiinso.sfc.commands.handlers;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
 import org.slf4j.Logger;
 
 import net.dv8tion.jda.core.JDA;
@@ -12,7 +13,6 @@ import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
-import net.shadowpie.sadiinso.sfc.commands.declaration.ASFCommand;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 
@@ -28,7 +28,7 @@ public class ASFCommandHandler extends AbstractCommandHandler {
 	private final Class<?>[] types;
 	private final Object[] params; // cache parameters array
 	
-	public ASFCommandHandler(ASFCommand infos, Method command, Object target, String[] perms) {
+	public ASFCommandHandler(SFCommand infos, Method command, Object target, String[] perms) {
 		super(infos.name(), infos.alias(), infos.usage(), infos.description(), OriginPerms.compute(infos.allowFrom()), perms);
 		
 		method = command;

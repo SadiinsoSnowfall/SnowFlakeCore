@@ -69,16 +69,23 @@ public class DB {
         config.addDataSourceProperty("prepStmtCacheSize", "25");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "1024");
         config.setPoolName("SFCPool");
-		ds = new HikariDataSource(config);
+        config.setConnectionInitSql("SET NAMES utf8mb4");
+        ds = new HikariDataSource(config);
 		
 		init = true;
 		return SFC.ALL_OK;
 	}
 	
+	/**
+	 * @return whether the DB connection is up or not
+	 */
 	public static boolean isInit() {
 		return init;
 	}
 	
+	/**
+	 * Shutdown the DB connection
+	 */
 	public static void shutdown() {
 		if(!init)
 			return;

@@ -4,19 +4,11 @@ import java.awt.Color;
 import java.awt.image.RenderedImage;
 import java.io.File;
 
+import net.dv8tion.jda.core.entities.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.MessageEmbed.Field;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.utils.JDALogger;
 
 public class ConsoleCommandContext extends CommandContext {
@@ -92,6 +84,11 @@ public class ConsoleCommandContext extends CommandContext {
 	}
 	
 	@Override
+	public Category getAsCategory(int index) {
+		return null;
+	}
+	
+	@Override
 	public void reply(String str) {
 		System.out.println(str);
 	}
@@ -114,27 +111,37 @@ public class ConsoleCommandContext extends CommandContext {
 
 	@Override
 	public void sendFile(File file) {
-		logger.warn("ConsoleCommandContext@sendFile: Unsupported operation");
+		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 	
 	@Override
 	public void sendFile(File file, String message) {
-		logger.warn("ConsoleCommandContext@sendFile: Unsupported operation");
+		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 	
 	@Override
 	public void sendFile(byte[] file, String message) {
-		logger.warn("ConsoleCommandContext@sendFile: Unsupported operation");
+		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 
 	@Override
 	public void sendImage(RenderedImage img, String message) {
-		logger.warn("ConsoleCommandContext@sendFile: Unsupported operation");
+		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 
 	@Override
 	public void sendImage(RenderedImage img) {
-		logger.warn("ConsoleCommandContext@sendImage: Unsupported operation");
+		logger.warn("ConsoleCommandContext#sendImage: Unsupported operation");
+	}
+
+	@Override
+	public void notifySuccess() {
+		System.out.println("command executed successfully");
+	}
+
+	@Override
+	public void notifyFailure() {
+		System.out.println("command execution failed");
 	}
 	
 }

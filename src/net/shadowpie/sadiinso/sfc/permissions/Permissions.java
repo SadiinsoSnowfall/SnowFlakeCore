@@ -56,21 +56,20 @@ public class Permissions {
 		// create table & procedure in DB
 		String sql = Utils.getDataResourceAsString("db_init_permission.sql");
 		if(sql == null) {
-			logger.error("Unable to read the database configuration file for the permission module");
-			return SFC.STOP_MODULE_ERROR;
-		}
-		
-		try (Connection conn = DB.getConn()) {	
-			Statement stat = conn.createStatement();
-			String[] updates = sql.split(";;");
-			
-			for(String update : updates)
-				if(!update.isBlank())
-					stat.executeUpdate(update);
-			
-		} catch (SQLException e) {
-			logger.error("Error while initialing the database for the permission module", e);
-			return SFC.STOP_MODULE_ERROR;
+			logger.error("Unable to read the database configuration file for the permission module, skipping DB init. This may cause errors");
+		} else {
+			try (Connection conn = DB.getConn()) {	
+				Statement stat = conn.createStatement();
+				String[] updates = sql.split(";;");
+				
+				for(String update : updates)
+					if(!update.isBlank())
+						stat.executeUpdate(update);
+				
+			} catch (SQLException e) {
+				logger.error("Error while initialing the database for the permission module", e);
+				return SFC.STOP_MODULE_ERROR;
+			}
 		}
 		
 		return SFC.ALL_OK;

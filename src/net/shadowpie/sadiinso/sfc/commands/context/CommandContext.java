@@ -6,23 +6,16 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import net.dv8tion.jda.core.entities.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import gnu.trove.list.array.TIntArrayList;
 import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
+import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
 
 public abstract class CommandContext {
@@ -71,7 +64,7 @@ public abstract class CommandContext {
 		args = (args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
 		
 		++currentArg;
-		resolvedMessagePP = (argsPos.length > currentArg ? resolvedMessage.substring(argsPos[currentArg]) : "");
+		resolvedMessagePP = (argsPos.length > currentArg ? resolvedMessage.substring(argsPos[currentArg]) : StringUtils.EMPTY);
 		return this;
 	}
 	
@@ -124,7 +117,7 @@ public abstract class CommandContext {
 	}
 	
 	/**
-	 * Return the given argument parsed as an 64 bits signed integer
+	 * Return the given argument parsed as a 64 bits signed integer
 	 * @param index The argument index
 	 */
 	public long getAsLong(int index) throws NumberFormatException {
@@ -132,13 +125,55 @@ public abstract class CommandContext {
 	}
 	
 	/**
-	 * Return the given argument parsed as an 64 bits signed integer without throwing errors
+	 * Return the given argument parsed as a 64 bits signed integer without throwing errors
 	 * In case of errors, return the fallback value
 	 * @param index The argument index
 	 */
 	public long getAsLong(int index, long fallback) {
 		try {
 			return Long.parseLong(args[index]);
+		} catch(Exception ignored) {}
+		
+		return fallback;
+	}
+	
+	/**
+	 * Return the given argument parsed as a double
+	 * @param index The argument index
+	 */
+	public double getAsDouble(int index) throws NumberFormatException {
+		return Double.parseDouble(args[index]);
+	}
+	
+	/**
+	 * Return the given argument parsed as a double without throwing errors
+	 * In case of errors, return the fallback value
+	 * @param index The argument index
+	 */
+	public double getAsDouble(int index, double fallback) {
+		try {
+			return Double.parseDouble(args[index]);
+		} catch(Exception ignored) {}
+		
+		return fallback;
+	}
+	
+	/**
+	 * Return the given argument parsed as a float
+	 * @param index The argument index
+	 */
+	public float getAsFloat(int index) throws NumberFormatException {
+		return Float.parseFloat(args[index]);
+	}
+	
+	/**
+	 * Return the given argument parsed as a float without throwing errors
+	 * In case of errors, return the fallback value
+	 * @param index The argument index
+	 */
+	public float getAsLong(int index, float fallback) {
+		try {
+			return Float.parseFloat(args[index]);
 		} catch(Exception ignored) {}
 		
 		return fallback;
@@ -192,7 +227,7 @@ public abstract class CommandContext {
 	/**
 	 * Return the given argument parsed as a textchannel
 	 * <br/>
-	 * Attention, this function will also search channels by name, if two roles channels the same name, the first one will be returned
+	 * Attention, this function will also search channels by name, if two channels have the same name, the first one will be returned
 	 * <br/>
 	 * Attention, use this function only if you are sure the message was sent in a guild
 	 * @param index The argument index
@@ -203,13 +238,24 @@ public abstract class CommandContext {
 	/**
 	 * Return the given argument parsed as a voicechannel
 	 * <br/>
-	 * Attention, this function will also search channels by name, if two roles channels the same name, the first one will be returned
+	 * Attention, this function will also search channels by name, if two channels have the same name, the first one will be returned
 	 * <br/>
 	 * Attention, use this function only if you are sure the message was sent in a guild
 	 * @param index The argument index
 	 * @return The channel or null if an error occured or if the command was not sent in a server
 	 */
 	public abstract VoiceChannel getAsVoiceChannel(int index);
+	
+	/**
+	 * Return the given argument parsed as a Category
+	 * <br/>
+	 * Attention, this function will also search category by name, if two categories have the same name, the first one will be returned
+	 * <br/>
+	 * Attention, use this function only if you are sure the message was sent in a guild
+	 * @param index The argument index
+	 * @return The Category or null if an error occured or if the command was not sent in a server
+	 */
+	public abstract Category getAsCategory(int index);
 	
 	/**
 	 * Pack all the arguments in one string
@@ -458,6 +504,16 @@ public abstract class CommandContext {
 	 * @param name The image name
 	 */
 	public abstract void sendImage(RenderedImage img, String name);
+	
+	/**
+	 * Add {@link JdaUtils#EMOJI_ACCEPT} as a reaction to the command message
+	 */
+	public abstract void notifySuccess();
+	
+	/**
+	 * Add {@link JdaUtils#EMOJI_DENY} as a reaction to the command message
+	 */
+	public abstract void notifyFailure();
 	
 	//################
 	// Utils & private

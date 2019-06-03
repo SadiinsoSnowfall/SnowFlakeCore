@@ -7,7 +7,7 @@ import java.util.List;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
-import net.shadowpie.sadiinso.sfc.commands.declaration.ASFCommand;
+import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
 import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.GroupedCommandHandler;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
@@ -18,12 +18,12 @@ public final class HelpCommand {
 
 	public static String STR_CMD_NOT_FOUND = "Commande inconnue : %s";
 
-	@ASFCommand(name = "ownerhelp", allowFrom = "all/ownerOnly", usage = "[command]", description = "Affiche la liste des commandes")
+	@SFCommand(name = "ownerhelp", allowFrom = "all/ownerOnly", usage = "[command]", description = "Affiche la liste des commandes")
 	public static void onOwnerHelp(CommandContext ctx) {
 		showHelp(ctx, true);
 	}
 	
-	@ASFCommand(name="help", usage = "[command]", description = "Affiche la liste des commandes")
+	@SFCommand(name="help", usage = "[command]", description = "Affiche la liste des commandes")
 	public static void onHelp(CommandContext ctx) {
 		showHelp(ctx, false);
 	}

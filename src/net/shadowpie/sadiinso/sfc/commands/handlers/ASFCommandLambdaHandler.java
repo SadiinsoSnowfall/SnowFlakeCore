@@ -9,7 +9,7 @@ import java.lang.reflect.Method;
 
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
-import net.shadowpie.sadiinso.sfc.commands.declaration.ASFCommand;
+import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 
 public class ASFCommandLambdaHandler extends AbstractCommandHandler {
@@ -19,7 +19,7 @@ public class ASFCommandLambdaHandler extends AbstractCommandHandler {
 		public void execute(CommandContext ctx);
 	}
 	
-	public static ASFCommandLambdaHandler createHandler(ASFCommand infos, Method m, String[] perms) throws Throwable {
+	public static ASFCommandLambdaHandler createHandler(SFCommand infos, Method m, String[] perms) throws Throwable {
 		Lookup lookup = MethodHandles.lookup();
 		MethodHandle mh = lookup.unreflect(m);
 		CommandCallSite command = (CommandCallSite) LambdaMetafactory.metafactory(lookup, "execute", MethodType.methodType(CommandCallSite.class), mh.type(), mh, mh.type()).getTarget().invokeExact();
@@ -28,7 +28,7 @@ public class ASFCommandLambdaHandler extends AbstractCommandHandler {
 	
 	private final CommandCallSite command;
 	
-	public ASFCommandLambdaHandler(ASFCommand infos, CommandCallSite command, String[] perms) {
+	public ASFCommandLambdaHandler(SFCommand infos, CommandCallSite command, String[] perms) {
 		super(infos.name(), infos.alias(), infos.usage(), infos.description(), OriginPerms.compute(infos.allowFrom()), perms);
 		this.command = command;
 	}

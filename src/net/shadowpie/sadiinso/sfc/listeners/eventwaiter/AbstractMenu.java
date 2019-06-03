@@ -15,6 +15,7 @@
  */
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
+import java.awt.Color;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -24,8 +25,11 @@ import javax.annotation.Nullable;
 import net.dv8tion.jda.core.entities.Guild;
 import net.dv8tion.jda.core.entities.Message;
 import net.dv8tion.jda.core.entities.MessageChannel;
+import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.entities.User;
+import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 
 /**
  * A frame for wrapping a menu that waits on forms of user input such as reactions,
@@ -69,23 +73,74 @@ public abstract class AbstractMenu {
     }
     
     /**
-     * Displays this Menu in a {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel}.
+     * Send a message in the given {@link MessageChannel} and attach the menu to it.
      * 
-     * @param  channel
-     *         The MessageChannel to display this Menu in
+     * @param channel The MessageChannel to display this Menu in
+     * @param title The Title of the message to send
      */
-    public abstract void display(MessageChannel channel);
+    public void display(MessageChannel channel, String title) {
+    	display(channel, JdaUtils.getEmbedBuilder(title).build());
+    }
+
+    /**
+     * Send a message in the given {@link MessageChannel} and attach the menu to it.
+     * 
+     * @param channel The MessageChannel to display this Menu in
+     * @param title The Title of the message to send
+     * @param description The description of the message to send
+     */
+    public void display(MessageChannel channel, String title, String description) {
+    	display(channel, title, description, ConfigHandler.color_theme());
+    }
     
     /**
-     * Displays this Menu as a designated {@link net.dv8tion.jda.core.entities.Message Message}.
-     * <br>The Message provided must be one sent by the bot! Trying to provided a Message
-     * authored by another {@link net.dv8tion.jda.core.entities.User User} will prevent the
-     * Menu from being displayed!
+     * Send a message in the given {@link MessageChannel} and attach the menu to it.
      * 
-     * @param  message
-     *         The Message to display this Menu as
+     * @param channel The MessageChannel to display this Menu in
+     * @param title The Title of the message to send
+     * @param description The description of the message to send
+     * @param color The color of the message to send
      */
-    public abstract void display(Message message);
+    public void display(MessageChannel channel, String title, String description, Color color) {
+    	display(channel, JdaUtils.sendAsEmbed(null, title, description, color));
+    }
+    
+    
+    /**
+     * Displays this Menu in a {@link MessageChannel}.
+     * 
+     * @param channel The MessageChannel to display this Menu in
+     * @param message The Message to send
+     */
+    public void display(MessageChannel channel, MessageEmbed message) {
+    	display(channel, message, 1);
+    }
+    
+    /**
+     * Displays this Menu in a {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel}.
+     * 
+     * @param channel The MessageChannel to display this Menu in
+     * @param message The Message to send
+     * @param subCount The maximum number of event to receive before closing the menu
+     */
+    public abstract void display(MessageChannel channel, MessageEmbed message, int subCount);
+    
+    /**
+     * Attach the menu to the given {@link net.dv8tion.jda.core.entities.Message Message}.
+     * 
+     * @param message The Message to display this Menu as
+     */
+    public void attach(Message message) {
+    	attach(message, 1);
+    }
+    
+    /**
+     * Attach the menu to the given {@link net.dv8tion.jda.core.entities.Message Message}.
+     * 
+     * @param message The Message to display this Menu as
+     * @param subCount The maximum number of event to receive before closing the menu
+     */
+    public abstract void attach(Message message, int subCount);
 
     /**
      * Checks to see if the provided {@link net.dv8tion.jda.core.entities.User User}
@@ -94,12 +149,11 @@ public abstract class AbstractMenu {
      * This is a shortcut for {@link #isValidUser(User, Guild)} where the Guild
      * is {@code null}.
      *
-     * @param  user
-     *         The User to validate.
+     * @param user  The User to validate.
      *
      * @return {@code true} if the User is valid, {@code false} otherwise.
      *
-     * @see    #isValidUser(User, Guild)
+     * @see #isValidUser(User, Guild)
      */
     protected boolean isValidUser(User user) {
         return isValidUser(user, null);

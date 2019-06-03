@@ -5,15 +5,7 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 import java.util.List;
 
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.TextChannel;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.core.entities.*;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
@@ -94,11 +86,14 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			return guild.getMemberById(args[index]);
-		} catch (Exception e) {
-			List<Member> matchs = guild.getMembersByName(args[index], true);
-			return (matchs.isEmpty() ? null : matchs.get(0));
-		}
+			Member member = guild.getMemberById(args[index]);
+			if(member != null) {
+				return member;
+			}
+		} catch (Exception ignored) {}
+		
+		List<Member> matchs = guild.getMembersByName(args[index], true);
+		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
 	@Override
@@ -108,11 +103,14 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			return guild.getRoleById(args[index]);
-		} catch (Exception e) {
-			List<Role> matchs = guild.getRolesByName(args[index], true);
-			return (matchs.isEmpty() ? null : matchs.get(0));
-		}
+			Role role = guild.getRoleById(args[index]);
+			if(role != null) {
+				return role;
+			}
+		} catch (Exception ignored) {}
+		
+		List<Role> matchs = guild.getRolesByName(args[index], true);
+		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
 	@Override
@@ -122,11 +120,14 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			return guild.getTextChannelById(args[index]);
-		} catch (Exception e) {
-			List<TextChannel> matchs = guild.getTextChannelsByName(args[index], true);
-			return (matchs.isEmpty() ? null : matchs.get(0));
-		}
+			TextChannel channel = guild.getTextChannelById(args[index]);
+			if(channel != null) {
+				return channel;
+			}
+		} catch (Exception ignored) {}
+		
+		List<TextChannel> matchs = guild.getTextChannelsByName(args[index], true);
+		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
 	@Override
@@ -136,11 +137,31 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			return guild.getVoiceChannelById(args[index]);
-		} catch (Exception e) {
-			List<VoiceChannel> matchs = guild.getVoiceChannelsByName(args[index], true);
-			return (matchs.isEmpty() ? null : matchs.get(0));
-		}
+			VoiceChannel channel = guild.getVoiceChannelById(args[index]);
+			if(channel != null) {
+				return channel;
+			}
+		} catch (Exception ignored) {}
+		
+		List<VoiceChannel> matchs = guild.getVoiceChannelsByName(args[index], true);
+		return (matchs.isEmpty() ? null : matchs.get(0));
+	}
+	
+	@Override
+	public Category getAsCategory(int index) {
+		Guild guild = this.getGuild();
+		if(guild == null)
+			return null;
+		
+		try {
+			Category category = guild.getCategoryById(args[index]);
+			if(category != null) {
+				return category;
+			}
+		} catch (Exception ignored) {}
+		
+		List<Category> matchs = guild.getCategoriesByName(args[index], true);
+		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
 	//#######################
@@ -199,6 +220,16 @@ public class DiscordCommandContext extends CommandContext {
 		}
 		
 		message.getChannel().sendFile(converted, msg).queue();
+	}
+
+	@Override
+	public void notifySuccess() {
+		react(JdaUtils.EMOJI_ACCEPT);
+	}
+
+	@Override
+	public void notifyFailure() {
+		react(JdaUtils.EMOJI_DENY);
 	}
 	
 }

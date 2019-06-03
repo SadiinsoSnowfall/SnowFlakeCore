@@ -50,39 +50,26 @@ public class JdaUtils {
 		return sendAsEmbed(channel, message, null, ConfigHandler.color_theme());
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String message, String sub) {
-		return sendAsEmbed(channel, message, sub, ConfigHandler.color_theme());
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, String title, String sub) {
+		return sendAsEmbed(channel, title, sub, ConfigHandler.color_theme());
 	}
 
 	public static MessageEmbed sendAsEmbed(MessageChannel channel, String message, Color color) {
 		return sendAsEmbed(channel, message, null, color);
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String message, String sub, Color color) {
-		EmbedBuilder builder = new EmbedBuilder();
-		builder.setColor(color);
-
-		if ((sub == null) || sub.isEmpty())
-			builder.setAuthor(message);
-		else
-			builder.addField(message, sub, false);
-
-		MessageEmbed msg = builder.build();
-		
-		if(channel != null)
-			channel.sendMessage(msg).queue();
-		
-		return msg;
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, String title, String sub, Color color) {
+		return sendAsEmbed(channel, title, sub, null, color);
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String message, String sub, String footer, Color color) {
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, String title, String sub, String footer, Color color) {
 		EmbedBuilder builder = new EmbedBuilder();
 		builder.setColor(color);
 
 		if ((sub == null) || sub.isEmpty())
-			builder.setTitle(message);
+			builder.setDescription(title);
 		else
-			builder.addField(message, sub, false);
+			builder.addField(title, sub, false);
 
 		builder.setFooter(footer, null);
 		MessageEmbed msg = builder.build();
