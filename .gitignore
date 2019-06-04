@@ -1,0 +1,11 @@
+#ignore thoses files / folders
+changelog.txt
+.settings/
+bin/
+javadocs/
+.classpath
+.project
+build.xml
+target/
+.idea/
+SnowFlakeCore.iml

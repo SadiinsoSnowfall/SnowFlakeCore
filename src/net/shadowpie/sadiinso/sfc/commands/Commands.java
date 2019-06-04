@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandHandler;
 import org.slf4j.Logger;
 
 import net.dv8tion.jda.core.utils.JDALogger;
@@ -15,8 +16,6 @@ import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommandHelper;
-import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandHandler;
-import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandLambdaHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.GroupedCommandHandler;
 import net.shadowpie.sadiinso.sfc.config.ASFConfig;
@@ -274,15 +273,14 @@ public final class Commands {
 			Config cfg = ConfigHandler.queryConfig(label);
 
 			try {
-				m.invoke(null, new Object[] { cfg });
+				m.invoke(null, cfg);
 			} catch (Exception e) {
 				logger.error("Config helper execution at \"" + clazz.getSimpleName() + "\"", e);
 				return;
 			}
 
 			if (cfg.needRewrite()) {
-				logger.warn("The configuration \"" + label + "\" need to be rewrited, the bot will shutdown.");
-				return;
+				logger.warn("The configuration \"" + label + "\" need to be reloaded, the bot will shutdown.");
 			}
 		});
 
@@ -290,18 +288,16 @@ public final class Commands {
 			try {
 				m.invoke(null, (Object[]) null);
 			} catch (Exception e) {
-				logger.error("Command helper execution at \"" + m.getName() + "\" of \"" + clazz.getName() + "\"", e);
-				return;
+				logger.error("Command helper execution error at \"" + m.getName() + "@" + clazz.getName() + "\"", e);
 			}
 		});
 
 		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(SFCommand.class) && Modifier.isStatic(m.getModifiers())))
-				.forEach(m -> addASFCommandInternal(m, null));
+				.forEach(Commands::addASFCommandInternal);
 	}
 
 	/**
-	 * Called by {@link Commands#addCommands(Object)} and
-	 * {@link Commands#addCommands(Class)}, defined here to increase code
+	 * Called by {@link Commands#addCommands(Class)}, defined here to increase code
 	 * readability. Add a command to the internal command map.
 	 * <p>
 	 * If the command is static and only take a CommandContext as an argument, the
@@ -310,7 +306,7 @@ public final class Commands {
 	 * 
 	 * @param m method that has SFCommand annotation.
 	 */
-	private static void addASFCommandInternal(Method m, Object target) {
+	private static void addASFCommandInternal(Method m) {
 		SFCommand a = m.getAnnotation(SFCommand.class);
 		AbstractCommandHandler handler = null;
 
@@ -332,19 +328,18 @@ public final class Commands {
 		}
 
 		// check if the command call can be optimized as a lambda call
-		if ((target == null) && (m.getParameterCount() == 1) && (m.getParameterTypes()[0] == CommandContext.class)) {
+		if ((m.getParameterCount() == 1) && (m.getParameterTypes()[0] == CommandContext.class)) {
 			try {
-				handler = ASFCommandLambdaHandler.createHandler(a, m, perms);
+				handler = ASFCommandHandler.createHandler(a, m, perms);
 			} catch (Throwable t) {
-				// lambda optimization failed, rolling back to legacy
-				handler = new ASFCommandHandler(a, m, target, perms);
+				logger.error("Error while creating the handler for the command \"" + a.name() + "@" + m.getClass().getName() + "\"", t);
 			}
 		} else {
-			// legacy command handler
-			handler = new ASFCommandHandler(a, m, target, perms);
+			// invalid command declaration
+			logger.warn("Ignoring command \"" + a.name() + "@" + m.getClass().getName() + "\" because its declaration is not valid");
 		}
 
-		if ((a.parentGroup() != null) && !a.parentGroup().isEmpty()) {
+		if (!a.parentGroup().isEmpty()) {
 			GroupedCommandHandler group = findCommandGroup(a.parentGroup());
 
 			if (group == null) {
@@ -358,7 +353,7 @@ public final class Commands {
 		}
 
 		// add alias
-		if ((a.alias() != null) && !a.alias().isEmpty()) {
+		if (!a.alias().isEmpty()) {
 			aliases.put(a.alias().toLowerCase(), handler);
 		}
 
