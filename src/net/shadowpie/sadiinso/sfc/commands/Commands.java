@@ -1,21 +1,11 @@
 package net.shadowpie.sadiinso.sfc.commands;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
-import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandHandler;
-import org.slf4j.Logger;
-
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommandHelper;
+import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.GroupedCommandHandler;
 import net.shadowpie.sadiinso.sfc.config.ASFConfig;
@@ -24,6 +14,11 @@ import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.permissions.Permissions;
 import net.shadowpie.sadiinso.sfc.utils.Utils;
+import org.slf4j.Logger;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.*;
 
 public final class Commands {
 
@@ -112,16 +107,6 @@ public final class Commands {
 			if (!OriginPerms.has(perms, OriginPerms.PERM_SERVER)) {
 				ctx.warn(err_no_server);
 				return COMMAND_PERM_ERROR;
-			}
-		}
-
-		// verify execution permissions
-		if ((origin == ContextOrigin.SERVER) && (handler.perms != null)) {
-			for (String perm : handler.perms) {
-				if (!Permissions.hasPerm(ctx.getGuild().getIdLong(), ctx.getAuthorIdLong(), perm)) {
-					ctx.warn(err_no_perm.replace("%perm", perm));
-					return COMMAND_PERM_ERROR;
-				}
 			}
 		}
 
@@ -293,7 +278,7 @@ public final class Commands {
 		});
 
 		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(SFCommand.class) && Modifier.isStatic(m.getModifiers())))
-				.forEach(Commands::addASFCommandInternal);
+				.forEach(Commands::addSFCommandInternal);
 	}
 
 	/**
@@ -306,7 +291,7 @@ public final class Commands {
 	 * 
 	 * @param m method that has SFCommand annotation.
 	 */
-	private static void addASFCommandInternal(Method m) {
+	private static void addSFCommandInternal(Method m) {
 		SFCommand a = m.getAnnotation(SFCommand.class);
 		AbstractCommandHandler handler = null;
 

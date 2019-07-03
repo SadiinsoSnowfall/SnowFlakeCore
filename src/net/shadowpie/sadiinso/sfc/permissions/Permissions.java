@@ -1,20 +1,5 @@
 package net.shadowpie.sadiinso.sfc.permissions;
 
-import java.sql.CallableStatement;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.Types;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-
 import net.dv8tion.jda.core.entities.Member;
 import net.dv8tion.jda.core.entities.Role;
 import net.dv8tion.jda.core.utils.JDALogger;
@@ -23,7 +8,14 @@ import net.shadowpie.sadiinso.sfc.db.DB;
 import net.shadowpie.sadiinso.sfc.db.DBUtils;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
-import net.shadowpie.sadiinso.sfc.utils.Utils;
+import org.slf4j.Logger;
+
+import java.sql.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 public class Permissions {
 
@@ -46,7 +38,7 @@ public class Permissions {
 			return SFC.ALL_OK;
 		}
 		
-		permPattern = Pattern.compile("^[a-z]*(\\.[a-z]*)*(\\.\\*)?$");
+		permPattern = Pattern.compile("^[a-z]+(\\.[a-z]+)*(\\.\\*)?$");
 
 		remAllPerms = "DELETE FROM perms_user WHERE sid = ? AND uid = ?";
 		remAllRolePerms = "DELETE FROM perms_roles WHERE sid = ? AND rid = ?";
@@ -54,7 +46,7 @@ public class Permissions {
 		getAllRolePermsName = "SELECT name, isgroup FROM perms_def WHERE id IN (SELECT pid FROM perms_roles WHERE sid = ? AND rid = ?) ORDER BY name";
 		
 		// create table & procedure in DB
-		String sql = Utils.getDataResourceAsString("db_init_permission.sql");
+		/*String sql = Utils.getDataResourceAsString("db_init_permission.sql");
 		if(sql == null) {
 			logger.error("Unable to read the database configuration file for the permission module, skipping DB init. This may cause errors");
 		} else {
@@ -70,7 +62,7 @@ public class Permissions {
 				logger.error("Error while initialing the database for the permission module", e);
 				return SFC.STOP_MODULE_ERROR;
 			}
-		}
+		}*/
 		
 		return SFC.ALL_OK;
 	}
@@ -281,7 +273,7 @@ public class Permissions {
 		
 		if (!isPermPath(perm))
 			return 3;
-
+		
 		try (Connection conn = DB.getConn()) {
 			CallableStatement call = conn.prepareCall("{CALL registerPerm(?)}");
 			call.setString(1, extractMasterPath(perm));

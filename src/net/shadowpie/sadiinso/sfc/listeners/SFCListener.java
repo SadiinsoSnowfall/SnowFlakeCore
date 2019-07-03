@@ -1,31 +1,8 @@
 package net.shadowpie.sadiinso.sfc.listeners;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.guild.GuildBanEvent;
-import net.dv8tion.jda.core.events.guild.GuildUnbanEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberJoinEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberLeaveEvent;
-import net.dv8tion.jda.core.events.guild.member.GuildMemberNickChangeEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceJoinEvent;
-import net.dv8tion.jda.core.events.guild.voice.GuildVoiceLeaveEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageDeleteEvent;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageUpdateEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionAddEvent;
-import net.dv8tion.jda.core.events.message.guild.react.GuildMessageReactionRemoveEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.priv.react.PrivateMessageReactionAddEvent;
-import net.dv8tion.jda.core.events.message.priv.react.PrivateMessageReactionRemoveEvent;
-import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
@@ -33,6 +10,8 @@ import net.shadowpie.sadiinso.sfc.commands.context.DiscordCommandContext;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.listeners.eventwaiter.EventWaiter;
 import net.shadowpie.sadiinso.sfc.listeners.filter.AbstractFilter;
+
+import java.util.*;
 
 public class SFCListener extends ListenerAdapter {
 
@@ -86,44 +65,23 @@ public class SFCListener extends ListenerAdapter {
 		super();
 	}
 	
-	// #############
-	// GENERIC EVENT
-	// #############
-	
 	@Override
 	public void onGenericEvent(Event event) {
 		// notify event waiter
 		EventWaiter.onEvent(event);
 		
-		// execute handlers
-		for (CustomEventHandler<Event> handler : getHandlers(Event.class))
+		// execute generic handlers
+		for (CustomEventHandler<Event> handler : getHandlers(Event.class)) {
 			handler.handle(event);
+		}
+		
+		// handle custom events
+		if(event.getClass() != Event.class) {
+			for (CustomEventHandler handler : getHandlers(event.getClass())) {
+				handler.handle(event);
+			}
+		}
 	}
-	
-	@Override
-	public void onMessageReactionAdd(MessageReactionAddEvent event) {
-		// execute handlers
-		for (CustomEventHandler<MessageReactionAddEvent> handler : getHandlers(MessageReactionAddEvent.class))
-			handler.handle(event);
-	}
-	
-	@Override
-	public void onMessageReactionRemove(MessageReactionRemoveEvent event) {
-		// execute handlers
-		for (CustomEventHandler<MessageReactionRemoveEvent> handler : getHandlers(MessageReactionRemoveEvent.class))
-			handler.handle(event);
-	}
-	
-	@Override
-	public void onGenericMessageReaction(GenericMessageReactionEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GenericMessageReactionEvent> handler : getHandlers(GenericMessageReactionEvent.class))
-			handler.handle(event);
-	}
-
-	// ################
-	// PRIVATE MESSAGES
-	// ################
 
 	@Override
 	public void onPrivateMessageReceived(PrivateMessageReceivedEvent event) {
@@ -145,29 +103,7 @@ public class SFCListener extends ListenerAdapter {
 			if (ctx != null)
 				Commands.execute(ctx);
 		}
-
-		// execute handlers
-		for (CustomEventHandler<PrivateMessageReceivedEvent> handler : getHandlers(PrivateMessageReceivedEvent.class))
-			handler.handle(event);
 	}
-	
-	@Override
-	public void onPrivateMessageReactionAdd(PrivateMessageReactionAddEvent event) {
-		// execute handlers
-		for (CustomEventHandler<PrivateMessageReactionAddEvent> handler : getHandlers(PrivateMessageReactionAddEvent.class))
-				handler.handle(event);
-	}
-	
-	@Override
-	public void onPrivateMessageReactionRemove(PrivateMessageReactionRemoveEvent event) {
-		// execute handlers
-		for (CustomEventHandler<PrivateMessageReactionRemoveEvent> handler : getHandlers(PrivateMessageReactionRemoveEvent.class))
-			handler.handle(event);
-	}
-
-	// ##############
-	// GUILD MESSAGES
-	// ##############
 
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
@@ -190,96 +126,6 @@ public class SFCListener extends ListenerAdapter {
 			if (ctx != null)
 				Commands.execute(ctx);
 		}
-
-		// execute handlers
-		for (CustomEventHandler<GuildMessageReceivedEvent> handler : getHandlers(GuildMessageReceivedEvent.class))
-			handler.handle(event);
-	}
-
-	@Override
-	public void onGuildMessageUpdate(GuildMessageUpdateEvent event) {
-
-		// execute handlers
-		for (CustomEventHandler<GuildMessageUpdateEvent> handler : getHandlers(GuildMessageUpdateEvent.class))
-			handler.handle(event);
-	}
-
-	@Override
-	public void onGuildMessageDelete(GuildMessageDeleteEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildMessageDeleteEvent> handler : getHandlers(GuildMessageDeleteEvent.class))
-			handler.handle(event);
-	}
-
-	// #############
-	// GUILD MEMBERS
-	// #############
-
-	@Override
-	public void onGuildMemberJoin(GuildMemberJoinEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildMemberJoinEvent> handler : getHandlers(GuildMemberJoinEvent.class))
-			handler.handle(event);
-	}
-
-	@Override
-	public void onGuildMemberLeave(GuildMemberLeaveEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildMemberLeaveEvent> handler : getHandlers(GuildMemberLeaveEvent.class))
-			handler.handle(event);
-	}
-
-	@Override
-	public void onGuildMemberNickChange(GuildMemberNickChangeEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildMemberNickChangeEvent> handler : getHandlers(GuildMemberNickChangeEvent.class))
-			handler.handle(event);
-	}
-
-	@Override
-	public void onGuildBan(GuildBanEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildBanEvent> handler : getHandlers(GuildBanEvent.class))
-			handler.handle(event);
-	}
-
-	@Override
-	public void onGuildUnban(GuildUnbanEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildUnbanEvent> handler : getHandlers(GuildUnbanEvent.class))
-			handler.handle(event);
-	}
-	
-	@Override
-	public void onGuildMessageReactionAdd(GuildMessageReactionAddEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildMessageReactionAddEvent> handler : getHandlers(GuildMessageReactionAddEvent.class))
-				handler.handle(event);
-	}
-	
-	@Override
-	public void onGuildMessageReactionRemove(GuildMessageReactionRemoveEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildMessageReactionRemoveEvent> handler : getHandlers(GuildMessageReactionRemoveEvent.class))
-			handler.handle(event);
-	}
-	
-	// ##############
-	// GUILD CHANNELS
-	// ##############
-	
-	@Override
-	public void onGuildVoiceJoin(GuildVoiceJoinEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildVoiceJoinEvent> handler : getHandlers(GuildVoiceJoinEvent.class))
-			handler.handle(event);
-	}
-	
-	@Override
-	public void onGuildVoiceLeave(GuildVoiceLeaveEvent event) {
-		// execute handlers
-		for (CustomEventHandler<GuildVoiceLeaveEvent> handler : getHandlers(GuildVoiceLeaveEvent.class))
-			handler.handle(event);
 	}
 	
 }
