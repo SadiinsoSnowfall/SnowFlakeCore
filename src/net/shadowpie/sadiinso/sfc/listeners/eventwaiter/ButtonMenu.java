@@ -15,24 +15,18 @@
  */
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
-import net.dv8tion.jda.core.entities.Emote;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.MessageReaction;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.User;
+import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.core.utils.Checks;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
+
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * A {@link net.shadowpie.sadiinso.sfc.listeners.eventwaiter.AbstractMenu
@@ -151,9 +145,9 @@ public class ButtonMenu extends AbstractMenu {
 	private static class OptionNode {
 		private final Consumer<MessageReactionAddEvent> onAdd;
 		private final Consumer<MessageReactionRemoveEvent> onRemove;
-		private final Consumer<MessageReaction> genericAction;
+		private final Consumer<GenericMessageReactionEvent> genericAction;
 
-		public OptionNode(Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove, Consumer<MessageReaction> genericAction) {
+		public OptionNode(Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove, Consumer<GenericMessageReactionEvent> genericAction) {
 			this.onAdd = onAdd;
 			this.onRemove = onRemove;
 			this.genericAction = genericAction;
@@ -169,7 +163,7 @@ public class ButtonMenu extends AbstractMenu {
 			}
 
 			if (genericAction != null)
-				genericAction.accept(event.getReaction());
+				genericAction.accept(event);
 		}
 	}
 
@@ -202,27 +196,36 @@ public class ButtonMenu extends AbstractMenu {
 		}
 
 		/**
-		 * Sets the {@link java.util.function.Consumer Consumer} action to perform upon
-		 * selecting a button.
+		 * Sets the {@link java.util.function.Consumer Consumer} action to perform upon interacting with a button
 		 *
-		 * @param action The Consumer action to perform upon selecting a button
+		 * @param action The Consumer action to perform upon interacting with a button
 		 * @return This builder
 		 */
-		public Builder setAction(Consumer<MessageReaction> action) {
-			this.action = new OptionNode(null, null, action);
-			return this;
+		public Builder setAction(Consumer<GenericMessageReactionEvent> action) {
+			return setAction(null, null, action);
 		}
 
 		/**
-		 * Sets the {@link java.util.function.Consumer Consumer} actions to perform upon
-		 * selecting a button.
+		 * Sets the {@link java.util.function.Consumer Consumer} actions to perform upon interacting with a button
 		 *
 		 * @param onAdd    The Consumer action to perform upon selecting a button
 		 * @param onRemove The Consumer action to perform upon deselecting a button
 		 * @return This builder
 		 */
 		public Builder setAction(Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove) {
-			this.action = new OptionNode(onAdd, onRemove, null);
+			return setAction(onAdd, onRemove, null);
+		}
+		
+		/**
+		 * Sets the {@link java.util.function.Consumer Consumer}  actions to perform upon interacting with a button
+		 *
+		 * @param onAdd    The Consumer action to perform upon selecting a button
+		 * @param onRemove The Consumer action to perform upon deselecting a button
+		 * @param action   The Consumer action of perform upon interacting with a button
+		 * @return This builder
+		 */
+		public Builder setAction(Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove, Consumer<GenericMessageReactionEvent> action) {
+			this.action = new OptionNode(onAdd, onRemove, action);
 			return this;
 		}
 
@@ -272,11 +275,10 @@ public class ButtonMenu extends AbstractMenu {
 		 * @param action The code to run when this button is clicked
 		 * @return This builder
 		 */
-		public Builder addChoice(String emoji, Consumer<MessageReaction> action) {
-			this.options.put(emoji, new OptionNode(null, null, action));
-			return this;
+		public Builder addChoice(String emoji, Consumer<GenericMessageReactionEvent> action) {
+			return addChoice(emoji, null, null, action);
 		}
-
+		
 		/**
 		 * Adds String unicode emojis as button choices.
 		 *
@@ -286,15 +288,30 @@ public class ButtonMenu extends AbstractMenu {
 		 * ButtonMenu.Builder#addChoice(Emote...)}.
 		 *
 		 * @param emoji    The String unicode emojis to add
-		 * 
 		 * @param onAdd    The code to run when this button is selected
-		 *
 		 * @param onRemove The code to run when this button is deselected
-		 *
 		 * @return This builder
 		 */
 		public Builder addChoice(String emoji, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove) {
-			this.options.put(emoji, new OptionNode(onAdd, onRemove, null));
+			return addChoice(emoji, onAdd, onRemove, null);
+		}
+		
+		/**
+		 * Adds String unicode emojis as button choices.
+		 *
+		 * <p>
+		 * Any non-unicode {@link net.dv8tion.jda.core.entities.Emote Emote}s should be
+		 * added using {@link ButtonMenu.Builder#addChoice(Emote...)
+		 * ButtonMenu.Builder#addChoice(Emote...)}.
+		 *
+		 * @param emoji    		The String unicode emojis to add
+		 * @param onAdd    		The code to run when this button is selected
+		 * @param onRemove 		The code to run when this button is deselected
+		 * @param genericAction The code to run upon interacting with this button
+		 * @return This builder
+		 */
+		public Builder addChoice(String emoji, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove, Consumer<GenericMessageReactionEvent> genericAction) {
+			this.options.put(emoji, new OptionNode(onAdd, onRemove, genericAction));
 			return this;
 		}
 
@@ -327,7 +344,7 @@ public class ButtonMenu extends AbstractMenu {
 		 * @param action The code to run when this button is clicked
 		 * @return This builder
 		 */
-		public Builder addChoice(Emote emote, Consumer<MessageReaction> action) {
+		public Builder addChoice(Emote emote, Consumer<GenericMessageReactionEvent> action) {
 			return addChoice(emote.getId(), action);
 		}
 
@@ -348,6 +365,23 @@ public class ButtonMenu extends AbstractMenu {
 		}
 		
 		/**
+		 * Adds custom {@link net.dv8tion.jda.core.entities.Emote Emote}s as button choices.
+		 * <p>
+		 * Any regular unicode emojis should be added using
+		 * {@link ButtonMenu.Builder#addChoice(String...)
+		 * ButtonMenu.Builder#addChoice(String...)}.
+		 *
+		 * @param emote    		The Emote objects to add
+		 * @param onAdd    		The code to run when this button is selected
+		 * @param onRemove 		The code to run when this button is deselected
+		 * @param genericAction The code to run upon interacting with this button
+		 * @return This builder
+		 */
+		public Builder addChoice(Emote emote, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove, Consumer<GenericMessageReactionEvent> genericAction) {
+			return addChoice(emote.getId(), onAdd, onRemove, genericAction);
+		}
+		
+		/**
 		 * Adds Emojis or Emotes as button choices.
 		 * <p>
 		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.core.entities.Emote Emote}
@@ -355,7 +389,7 @@ public class ButtonMenu extends AbstractMenu {
 		 * @param objs The Emote / emojis to add
 		 * @return This builder
 		 */
-		public Builder addChoice(Object... objs) {
+		public Builder addChoiceRaw(Object... objs) {
 			for (Object obj : objs) {
 				if(obj instanceof String) {
 					addChoice((String) obj);
@@ -378,14 +412,8 @@ public class ButtonMenu extends AbstractMenu {
 		 * @param action The code to run when this button is clicked
 		 * @return This builder
 		 */
-		public Builder addChoice(Object obj, Consumer<MessageReaction> action) {
-			if (obj instanceof String) {
-				return addChoice((String) obj, action);
-			} else if (obj instanceof Emote) {
-				return addChoice((Emote) obj, action);
-			} else {
-				throw new RuntimeException("The given object is not a String nor an Emote");
-			}
+		public Builder addChoiceRaw(Object obj, Consumer<GenericMessageReactionEvent> action) {
+			return addChoiceRaw(obj, null, null, action);
 		}
 		
 		/**
@@ -398,11 +426,26 @@ public class ButtonMenu extends AbstractMenu {
 		 * @param onRemove The code to run when this button is deselected
 		 * @return This builder
 		 */
-		public Builder addChoice(Object obj, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove) {
+		public Builder addChoiceRaw(Object obj, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove) {
+			return addChoiceRaw(obj, onAdd, onRemove, null);
+		}
+		
+		/**
+		 * Adds Emojis or Emotes as button choices.
+		 * <p>
+		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.core.entities.Emote Emote}
+		 *
+		 * @param obj      		The Emote / emoji to add
+		 * @param onAdd    		The code to run when this button is selected
+		 * @param onRemove 		The code to run when this button is deselected
+		 * @param genericAction The code to run upon interacting with this button
+		 * @return This builder
+		 */
+		public Builder addChoiceRaw(Object obj, Consumer<MessageReactionAddEvent> onAdd, Consumer<MessageReactionRemoveEvent> onRemove, Consumer<GenericMessageReactionEvent> genericAction) {
 			if (obj instanceof String) {
-				return addChoice((String) obj, onAdd, onRemove);
+				return addChoice((String) obj, onAdd, onRemove, genericAction);
 			} else if (obj instanceof Emote) {
-				return addChoice((Emote) obj, onAdd, onRemove);
+				return addChoice((Emote) obj, onAdd, onRemove, genericAction);
 			} else {
 				throw new RuntimeException("The given object is not a String nor an Emote");
 			}
