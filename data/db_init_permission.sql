@@ -35,6 +35,11 @@ proc: BEGIN
 	DECLARE itr INT DEFAULT 1;
 	DECLARE cur INT;
 
+	IF EXISTS (SELECT 1 FROM perms_users WHERE sid = sid AND uid = uid AND pid = (SELECT id FROM perms_def WHERE name = '*')) THEN
+    	SET res = true;
+		LEAVE proc;
+	END IF;
+
 	WHILE itr <= nbs DO
 		SET cur = (SELECT id FROM perms_def WHERE name = SUBSTRING_INDEX(perm, '.', itr));
 		
@@ -55,6 +60,18 @@ proc: BEGIN
 	DECLARE nbs INT DEFAULT LENGTH(perm) - LENGTH(REPLACE(perm, '.', '')) + 1;
 	DECLARE itr INT DEFAULT 1;
 	DECLARE cur INT;
+	DECLARE root_pid BIGINT;
+	SELECT id INTO root_pid FROM perms_def WHERE name = '*';
+	
+	IF EXISTS (SELECT 1 FROM perms_users WHERE sid = sid AND uid = uid AND pid = root_pid) THEN
+    	SET res = true;
+		LEAVE proc;
+	END IF;
+	
+	IF EXISTS (SELECT 1 FROM perms_roles WHERE sid = sid AND FIND_IN_SET(rid, roles) AND pid = root_pid) THEN
+    	SET res = true;
+		LEAVE proc;
+	END IF;
 	
 	WHILE itr <= nbs DO
 		SET cur = (SELECT id FROM perms_def WHERE name = SUBSTRING_INDEX(perm, '.', itr));
@@ -81,6 +98,11 @@ proc: BEGIN
 	DECLARE nbs INT DEFAULT LENGTH(perm) - LENGTH(REPLACE(perm, '.', '')) + 1;
 	DECLARE itr INT DEFAULT 1;
 	DECLARE cur INT;
+	
+	IF EXISTS (SELECT 1 FROM perms_roles WHERE sid = sid AND rid = rid AND pid = (SELECT id FROM perms_def WHERE name = '*')) THEN
+    	SET res = true;
+		LEAVE proc;
+	END IF;
 	
 	WHILE itr <= nbs DO
 		SET cur = (SELECT id FROM perms_def WHERE name = SUBSTRING_INDEX(perm, '.', itr));
@@ -125,6 +147,12 @@ proc: BEGIN
 		LEAVE proc;
 	END IF;
 	
+	
+    IF EXISTS (SELECT 1 FROM perms_users WHERE sid = sid AND uid = uid AND pid = (SELECT id FROM perms_def WHERE name = '*')) THEN
+    	SET res = 1;
+		LEAVE proc;
+	END IF;
+	
 	WHILE itr <= nbs DO
 		SET cur = (SELECT id FROM perms_def WHERE name = SUBSTRING_INDEX(perm, '.', itr));
 		
@@ -149,6 +177,11 @@ proc: BEGIN
 	
 	IF NOT EXISTS (SELECT 1 FROM perms_def WHERE name = perm) THEN
 		SET res = 4;
+		LEAVE proc;
+	END IF;
+	
+	IF EXISTS (SELECT 1 FROM perms_roles WHERE sid = sid AND rid = rid AND pid = (SELECT id FROM perms_def WHERE name = '*')) THEN
+    	SET res = 1;
 		LEAVE proc;
 	END IF;
 	

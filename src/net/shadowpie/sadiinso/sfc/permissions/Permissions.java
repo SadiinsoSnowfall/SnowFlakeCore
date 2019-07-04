@@ -21,7 +21,7 @@ public class Permissions {
 
 	private static final Logger logger = JDALogger.getLog("Permissions");
 
-	// only lowercase separated by dots
+	// only lowercase separated by dots or * (root perm)
 	private static Pattern permPattern;
 
 	public static final String permsListUsrKey = "#usr~";
@@ -38,9 +38,9 @@ public class Permissions {
 			return SFC.ALL_OK;
 		}
 		
-		permPattern = Pattern.compile("^[a-z]+(\\.[a-z]+)*(\\.\\*)?$");
+		permPattern = Pattern.compile("^(([a-z]+(\\.[a-z]+)*(\\.\\*)?)|\\*)$");
 
-		remAllPerms = "DELETE FROM perms_user WHERE sid = ? AND uid = ?";
+		remAllPerms = "DELETE FROM perms_users WHERE sid = ? AND uid = ?";
 		remAllRolePerms = "DELETE FROM perms_roles WHERE sid = ? AND rid = ?";
 		getAllPermsName = "SELECT name, isgroup FROM perms_def WHERE id IN (SELECT pid FROM perms_users WHERE sid = ? AND uid = ?) ORDER BY name";
 		getAllRolePermsName = "SELECT name, isgroup FROM perms_def WHERE id IN (SELECT pid FROM perms_roles WHERE sid = ? AND rid = ?) ORDER BY name";
@@ -63,6 +63,9 @@ public class Permissions {
 				return SFC.STOP_MODULE_ERROR;
 			}
 		}*/
+		
+		// ensure the root perm is registered
+		register("*");
 		
 		return SFC.ALL_OK;
 	}
@@ -102,19 +105,27 @@ public class Permissions {
 	 *         </ul>
 	 */
 	public static int grant(long serverid, long userid, String perm) {
-		if (!isPermPath(perm))
+		if(perm.equals("*")) {
+			// first revoke all perms then only add the root perm
+			revokeAll(serverid, userid);
+		} else if (!isPermPath(perm)) {
 			return 3;
+		}
 
 		// owner already have all the perms
-		if (ConfigHandler.owner_lid() == userid)
+		if (ConfigHandler.owner_lid() == userid) {
 			return 1;
+		}
 
 		Member member = JdaUtils.getMember(serverid, userid);
-		if(member == null)
+		if(member == null) {
 			return 5;
+		}
 		
-		if (member.isOwner())
+		// server owner already have all the perms
+		if (member.isOwner()) {
 			return 1;
+		}
 
 		int res;
 		try (Connection conn = DB.getConn()) {
@@ -149,8 +160,12 @@ public class Permissions {
 	 *         </ul>
 	 */
 	public static int grantToRole(long serverid, long roleid, String perm) {
-		if (!isPermPath(perm))
+		if(perm.equals("*")) {
+			// first revoke all perms then only add the root perm
+			revokeAllFromRole(serverid, roleid);
+		} else if(!isPermPath(perm)) {
 			return 3;
+		}
 
 		int res;
 		try (Connection conn = DB.getConn()) {
@@ -185,20 +200,24 @@ public class Permissions {
 	 *         </ul>
 	 */
 	public static int revoke(long serverid, long userid, String perm) {
-		if(perm.equals("*"))
+		if(perm.equals("*")) {
 			return revokeAll(serverid, userid);
+		}
 		
-		if (!isPermPath(perm))
+		if (!isPermPath(perm)) {
 			return 3;
+		}
 
-		// owner already have all the perms
-		if (ConfigHandler.owner_lid() == userid)
+		// bot owner have all the perms
+		if (ConfigHandler.owner_lid() == userid) {
 			return 0;
+		}
 
 		// guild owners have all the perms on their servers
 		Member member = JdaUtils.getMember(serverid, userid);
-		if ((member != null) && member.isOwner())
+		if ((member != null) && member.isOwner()) {
 			return 0;
+		}
 
 		int res;
 		try (Connection conn = DB.getConn()) {
@@ -232,11 +251,13 @@ public class Permissions {
 	 *         </ul>
 	 */
 	public static int revokeFromRole(long serverid, long roleid, String perm) {
-		if(perm.equals("*"))
+		if(perm.equals("*")) {
 			return revokeAllFromRole(serverid, roleid);
+		}
 		
-		if (!isPermPath(perm))
+		if (!isPermPath(perm)) {
 			return 3;
+		}
 
 		int res;
 		try (Connection conn = DB.getConn()) {
@@ -268,11 +289,13 @@ public class Permissions {
 	 *         </ul>
 	 */
 	public static int register(String perm) {
-		if(!DB.isInit())
+		if(!DB.isInit()) {
 			return 0;
+		}
 		
-		if (!isPermPath(perm))
+		if (!isPermPath(perm)) {
 			return 3;
+		}
 		
 		try (Connection conn = DB.getConn()) {
 			CallableStatement call = conn.prepareCall("{CALL registerPerm(?)}");
@@ -301,11 +324,13 @@ public class Permissions {
 
 		// guild owners have all the perms on their servers
 		Member member = JdaUtils.getMember(serverid, userid);
-		if ((member != null) && member.isOwner())
+		if ((member != null) && member.isOwner()) {
 			return true;
+		}
 		
-		if (!isPermPath(perm))
+		if (!isPermPath(perm)) {
 			return false;
+		}
 		
 		boolean res;
 		try (Connection conn = DB.getConn()) {
