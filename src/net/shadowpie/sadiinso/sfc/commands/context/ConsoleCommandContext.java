@@ -1,15 +1,14 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import java.awt.Color;
-import java.awt.image.RenderedImage;
-import java.io.File;
-
 import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.entities.MessageEmbed.Field;
+import net.dv8tion.jda.core.utils.JDALogger;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
-import net.dv8tion.jda.core.entities.MessageEmbed.Field;
-import net.dv8tion.jda.core.utils.JDALogger;
+import java.awt.*;
+import java.awt.image.RenderedImage;
+import java.io.File;
 
 public class ConsoleCommandContext extends CommandContext {
 
@@ -59,10 +58,15 @@ public class ConsoleCommandContext extends CommandContext {
 	}
 	
 	@Override
-	public String getUserAsMention() {
+	public String getAuthorAsMention() {
 		return StringUtils.EMPTY;
 	}
-
+	
+	@Override
+	public User getAsUser(int index) {
+		return null;
+	}
+	
 	@Override
 	public Member getAsMember(int index) {
 		return null;

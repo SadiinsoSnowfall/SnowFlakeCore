@@ -1,15 +1,15 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import java.awt.Color;
-import java.awt.image.RenderedImage;
-import java.io.File;
-import java.util.List;
-
 import net.dv8tion.jda.core.entities.*;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
-import net.shadowpie.sadiinso.sfc.utils.Utils;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
+
+import java.awt.*;
+import java.awt.image.RenderedImage;
+import java.io.File;
+import java.util.List;
 
 public class DiscordCommandContext extends CommandContext {
 	
@@ -42,11 +42,7 @@ public class DiscordCommandContext extends CommandContext {
 	
 	@Override
 	public Guild getGuild() {
-		MessageChannel chan = message.getChannel();
-		if(chan instanceof TextChannel)
-			return ((TextChannel) chan).getGuild();
-		else
-			return null;
+		return message.getGuild();
 	}
 	
 	@Override
@@ -75,8 +71,17 @@ public class DiscordCommandContext extends CommandContext {
 	}
 	
 	@Override
-	public String getUserAsMention() {
+	public String getAuthorAsMention() {
 		return message.getAuthor().getAsMention();
+	}
+	
+	@Override
+	public User getAsUser(int index) {
+		try {
+			return SFC.getJDA().retrieveUserById(getAsLong(index)).complete();
+		} catch (Exception e) {
+			return null;
+		}
 	}
 
 	@Override
@@ -86,13 +91,13 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			Member member = guild.getMemberById(args[index]);
+			Member member = guild.getMemberById(getAsLong(index));
 			if(member != null) {
 				return member;
 			}
 		} catch (Exception ignored) {}
 		
-		List<Member> matchs = guild.getMembersByName(args[index], true);
+		List<Member> matchs = guild.getMembersByName(arg(index), true);
 		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
@@ -103,13 +108,13 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			Role role = guild.getRoleById(args[index]);
+			Role role = guild.getRoleById(getAsLong(index));
 			if(role != null) {
 				return role;
 			}
 		} catch (Exception ignored) {}
 		
-		List<Role> matchs = guild.getRolesByName(args[index], true);
+		List<Role> matchs = guild.getRolesByName(arg(index), true);
 		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
@@ -120,13 +125,13 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			TextChannel channel = guild.getTextChannelById(args[index]);
+			TextChannel channel = guild.getTextChannelById(getAsLong(index));
 			if(channel != null) {
 				return channel;
 			}
 		} catch (Exception ignored) {}
 		
-		List<TextChannel> matchs = guild.getTextChannelsByName(args[index], true);
+		List<TextChannel> matchs = guild.getTextChannelsByName(arg(index), true);
 		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
@@ -137,13 +142,13 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			VoiceChannel channel = guild.getVoiceChannelById(args[index]);
+			VoiceChannel channel = guild.getVoiceChannelById(getAsLong(index));
 			if(channel != null) {
 				return channel;
 			}
 		} catch (Exception ignored) {}
 		
-		List<VoiceChannel> matchs = guild.getVoiceChannelsByName(args[index], true);
+		List<VoiceChannel> matchs = guild.getVoiceChannelsByName(arg(index), true);
 		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
@@ -154,13 +159,13 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		
 		try {
-			Category category = guild.getCategoryById(args[index]);
+			Category category = guild.getCategoryById(getAsLong(index));
 			if(category != null) {
 				return category;
 			}
 		} catch (Exception ignored) {}
 		
-		List<Category> matchs = guild.getCategoriesByName(args[index], true);
+		List<Category> matchs = guild.getCategoriesByName(arg(index), true);
 		return (matchs.isEmpty() ? null : matchs.get(0));
 	}
 	
@@ -213,7 +218,7 @@ public class DiscordCommandContext extends CommandContext {
 		byte[] converted;
 		
 		try {
-			converted = Utils.imgToByteArray(img, "png");
+			converted = SFUtils.imgToByteArray(img, "png");
 		} catch(Exception e) {
 			logger.error("Error while converting an image", e);
 			return;

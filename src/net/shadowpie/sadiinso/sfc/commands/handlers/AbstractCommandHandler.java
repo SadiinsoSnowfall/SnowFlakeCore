@@ -1,6 +1,7 @@
 package net.shadowpie.sadiinso.sfc.commands.handlers;
 
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class AbstractCommandHandler {
 
@@ -28,7 +29,7 @@ public abstract class AbstractCommandHandler {
 		}
 	}
 	
-	public abstract int execute(CommandContext ctx);
+	public abstract int execute(@NotNull CommandContext ctx);
 	
 	
 }

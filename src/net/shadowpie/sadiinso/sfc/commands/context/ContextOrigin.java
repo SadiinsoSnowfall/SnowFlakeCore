@@ -4,6 +4,6 @@ public enum ContextOrigin {
 
 	CONSOLE,
 	PRIVATE,
-	SERVER;
+	SERVER
 	
 }

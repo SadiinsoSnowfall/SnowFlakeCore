@@ -1,9 +1,5 @@
 package net.shadowpie.sadiinso.sfc.commands.base;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import net.dv8tion.jda.core.entities.Guild;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
@@ -12,7 +8,11 @@ import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.listeners.eventwaiter.ButtonMenu;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
-import net.shadowpie.sadiinso.sfc.utils.Utils;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class BaseCommands {
 
@@ -48,9 +48,35 @@ public class BaseCommands {
 		}
 
 		if (ctx.getOrigin() == ContextOrigin.CONSOLE)
-			ctx.reply(Utils.snapFormat(strs, 10, 2));
+			ctx.reply(SFUtils.snapFormat(strs, 10, 2));
 		else
-			ctx.reply(Utils.monospace(Utils.snapFormat(strs, 10, 2)));
+			ctx.reply(SFUtils.monospace(SFUtils.snapFormat(strs, 10, 2)));
+	}
+	
+	@SFCommand(
+			name = "echo",
+			usage = "<value>",
+			description = "Write the given value to the command pipeline"
+	)
+	public static void onEcho(CommandContext ctx) {
+		if(ctx.argc() > 0) {
+			if(ctx.hasPipeline()) {
+				ctx.writeToPipe(ctx.packArgs(" "));
+			} else {
+				ctx.info(ctx.packArgs(" "));
+			}
+		} else {
+			if(ctx.hasPipeContents()) {
+				if(ctx.hasPipeline()) {
+					ctx.getPipeOut().append(ctx.getPipeIn());
+				} else {
+					ctx.info(ctx.getPipeContents());
+				}
+			} else {
+				ctx.warn("Invalid parameters");
+				ctx.breakPipeline();
+			}
+		}
 	}
 
 }

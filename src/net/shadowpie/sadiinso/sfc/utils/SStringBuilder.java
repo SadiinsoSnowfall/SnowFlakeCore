@@ -1,12 +1,17 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
 import java.util.Arrays;
+import java.util.stream.IntStream;
 
-public class SStringBuilder {
+public class SStringBuilder implements Appendable, CharSequence {
 
 	private char[] chars;
 	private int length = 0;
 	private int hashcode = 0;
+	
+	//############
+	//CONSTRUCTORS
+	//############
 	
 	/**
 	 * Default constructor, set internal buffer size to 16
@@ -50,6 +55,10 @@ public class SStringBuilder {
 		length = chs.length;
 	}
 	
+	//#######
+	//GETTERS
+	//#######
+	
 	/**
 	 * @return total buffer size
 	 */
@@ -65,22 +74,62 @@ public class SStringBuilder {
 	}
 	
 	/**
+	 * Return the character at the given index
+	 * @param index The char index
+	 * @return A character
+	 */
+	public char charAt(int index) {
+		if((index >= 0) && (index < length)) {
+			return chars[index];
+		} else {
+			throw new IndexOutOfBoundsException(index);
+		}
+	}
+	
+	/**
+	 * Return the character at the given index without checking for OOB
+	 * @param index The char index
+	 * @return A character
+	 */
+	public char fastCharAt(int index) {
+		return chars[index];
+	}
+	
+	//#######
+	//SETTERS
+	//#######
+	
+	/**
 	 * Ensure that the internal buffer has a size at least equal to {capacity}
 	 * @param capacity minimum capacity to ensure
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
 	public SStringBuilder ensureCapacity(int capacity) {
-		if(capacity > chars.length)
+		if(capacity > chars.length) {
 			chars = Arrays.copyOf(chars, Math.max(chars.length << 1, capacity));
+		}
+		
+		return this;
+	}
+	
+	/**
+	 * Set the internal buffer size to the length of the current string
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder trimToSize() {
+		if(length != chars.length) {
+			chars = Arrays.copyOf(chars, length);
+		}
+		
 		return this;
 	}
 	
 	/**
 	 * Push a char to the internal buffer
 	 * @param c char to push
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
-	public SStringBuilder push(char c) {
+	public SStringBuilder append(char c) {
 		ensureCapacity(length + 1);
 		chars[length++] = c;
 		return this;
@@ -89,9 +138,9 @@ public class SStringBuilder {
 	/**
 	 * Push a String to the internal buffer
 	 * @param str String to push
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
-	public SStringBuilder push(String str) {
+	public SStringBuilder append(String str) {
 		ensureCapacity(length + str.length());
 		str.getChars(0, str.length(), chars, length);
 		length += str.length();
@@ -101,9 +150,9 @@ public class SStringBuilder {
 	/**
 	 * Push chars to the internal buffer
 	 * @param chs chars to push
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
-	public SStringBuilder push(char[] chs) {
+	public SStringBuilder append(char[] chs) {
 		ensureCapacity(chs.length + length);
 		System.arraycopy(chs, 0, chars, length, chs.length);
 		length += chs.length;
@@ -111,12 +160,94 @@ public class SStringBuilder {
 	}
 	
 	/**
+	 * Append the given {@link Object} to the internal buffer
+	 * @param obj The {@link Object} to append
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder append(Object obj) {
+		return append(String.valueOf(obj));
+	}
+	
+	/**
+	 * Append the given {@link SStringBuilder} to the internal buffer
+	 * @param sb The {@link SStringBuilder} to append
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder append(SStringBuilder sb) {
+		ensureCapacity(sb.length + length);
+		System.arraycopy(sb.chars, 0, chars, length, sb.length);
+		length += sb.length;
+		return this;
+	}
+	
+	/**
+	 * Append the given {@link SStringBuilder} to the internal buffer
+	 * @param sb The {@link SStringBuilder} to append
+	 * @param beginIndex The first char to append
+	 * @param endIndex The last char to append
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder append(SStringBuilder sb, int beginIndex, int endIndex) {
+		if(beginIndex >= endIndex) {
+			return this;
+		}
+		
+		if(endIndex >= sb.length) {
+			throw new IndexOutOfBoundsException(endIndex);
+		}
+		
+		int len = beginIndex - endIndex;
+		ensureCapacity(length + len);
+		System.arraycopy(sb.chars, beginIndex, chars, length, len);
+		length += len;
+		return this;
+	}
+	
+	/**
+	 * Append the given {@link CharSequence} to the internal buffer
+	 * @param s The {@link CharSequence} to append
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder append(CharSequence s) {
+		if (s instanceof String) {
+			return this.append((String) s);
+		}
+		
+		if (s instanceof SStringBuilder) {
+			return this.append((SStringBuilder) s);
+		}
+		
+		return this.append(s, 0, s.length());
+	}
+	
+	/**
+	 * Append the given {@link CharSequence} to the internal buffer
+	 * @param s The {@link CharSequence} to append
+	 * @param beginIndex The first char to append
+	 * @param endIndex The last char to append
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder append(CharSequence s, int beginIndex, int endIndex) {
+		if(beginIndex >= endIndex) {
+			return this;
+		}
+		
+		ensureCapacity(length + (endIndex - beginIndex));
+		for(int i = beginIndex; i < endIndex; i++) {
+			chars[length++] = s.charAt(i);
+		}
+		
+		return this;
+	}
+	
+	/**
 	 * Push chars to the internal buffer from the given index to the end of the given array
 	 * @param chs chars to push
 	 * @param from index to start at
+	 * @return This {@link SStringBuilder}
 	 */
-	public SStringBuilder push(char[] chs, int from) {
-		return push(chs, from, chs.length - from);
+	public SStringBuilder append(char[] chs, int from) {
+		return append(chs, from, chs.length - from);
 	}
 	
 	/**
@@ -124,8 +255,9 @@ public class SStringBuilder {
 	 * @param chs chars to push
 	 * @param from index to start at
 	 * @param count number of chars to push
+	 * @return This {@link SStringBuilder}
 	 */
-	public SStringBuilder push(char[] chs, int from, int count) {
+	public SStringBuilder append(char[] chs, int from, int count) {
 		ensureCapacity(length + count);
 		System.arraycopy(chs, from, chars, length, count);
 		length += count;
@@ -136,11 +268,11 @@ public class SStringBuilder {
 	 * Insert a char at the given position in the internal buffer
 	 * @param offset given position
 	 * @param c char to insert
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
 	public SStringBuilder insert(int offset, char c) {
 		if(offset >= length)
-			return push(c);
+			return append(c);
 		
 		ensureCapacity(length + 1);
 		System.arraycopy(chars, offset, chars, offset + 1, length - offset);
@@ -153,11 +285,11 @@ public class SStringBuilder {
 	 * Insert chars at the given position in the internal buffer
 	 * @param offset given position
 	 * @param chs chars to insert
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
 	public SStringBuilder insert(int offset, char[] chs) {
 		if(offset >= length)
-			return push(chs);
+			return append(chs);
 		
 		ensureCapacity(length + chs.length);
 		System.arraycopy(chars, offset, chars, offset + chs.length, length - offset);
@@ -170,11 +302,11 @@ public class SStringBuilder {
 	 * Insert a String at the given position in the internal buffer
 	 * @param offset given position
 	 * @param str String to insert
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
 	public SStringBuilder insert(int offset, String str) {
 		if(offset >= length)
-			return push(str);
+			return append(str);
 		
 		ensureCapacity(length + str.length());
 		System.arraycopy(chars, offset, chars, offset + str.length(), length - offset);
@@ -186,13 +318,30 @@ public class SStringBuilder {
 	/**
 	 * Return whether the internal buffer is empty or not
 	 */
-	public boolean empty() {
+	public boolean isEmpty() {
 		return length == 0;
 	}
 	
 	/**
+	 * Set the length of the SStringBuilder
+	 * @param len The length
+	 * @return This {@link SStringBuilder}
+	 */
+	public SStringBuilder setLength(int len) {
+		if(len >= 0) {
+			if(len >= chars.length) {
+				ensureCapacity(len);
+			}
+			
+			length = len;
+		}
+		
+		return this;
+	}
+	
+	/**
 	 * Reset the internal buffer (empty)
-	 * @return this
+	 * @return This {@link SStringBuilder}
 	 */
 	public SStringBuilder reset() {
 		length = 0;
@@ -230,8 +379,21 @@ public class SStringBuilder {
 		return Arrays.toString(chars);
 	}
 	
-	public char[] chars() {
-		return chars;
+	@Override
+	public IntStream chars() {
+		// don't look at this
+		return new String(chars).chars();
+	}
+	
+	@Override
+	public IntStream codePoints() {
+		// don't look at this
+		return new String(chars).codePoints();
+	}
+	
+	@Override
+	public CharSequence subSequence(int beginIndex, int endIndex) {
+		return new String(chars, beginIndex, endIndex);
 	}
 	
 	@Override
@@ -241,25 +403,26 @@ public class SStringBuilder {
 	
 	@Override
 	public int hashCode() {
-		if(hashcode == 0)
-			for(int t = 0; t < length; t++)
+		if(hashcode == 0) {
+			for (int t = 0; t < length; t++) {
 				hashcode = hashcode * 31 + chars[t];
+			}
+		}
 		
 		return hashcode;
 	}
 	
 	@Override
 	public boolean equals(Object obj) {
-		if(!(obj instanceof SStringBuilder))
+		if(this == obj) {
+			return true;
+		}
+		
+		if(!(obj instanceof SStringBuilder)) {
 			return false;
+		}
 		
 		return Arrays.equals(((SStringBuilder) obj).chars, chars);
-	}
-	
-	public static void main(String[] args) {
-		var ss = new SStringBuilder("foo");
-		ss.push("meow");
-		System.out.println(ss);
 	}
 	
 }

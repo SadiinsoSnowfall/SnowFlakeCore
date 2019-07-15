@@ -1,9 +1,5 @@
 package net.shadowpie.sadiinso.sfc.commands.base;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
@@ -12,7 +8,11 @@ import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.GroupedCommandHandler;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
-import net.shadowpie.sadiinso.sfc.utils.Utils;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
+
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 public final class HelpCommand {
 
@@ -58,13 +58,13 @@ public final class HelpCommand {
 				}
 				
 				EmbedBuilder embed = JdaUtils.getEmbedBuilder();
-				embed.addField("Groupe \"" + path + "\"", Utils.monospace(handler.description), false);
+				embed.addField("Groupe \"" + path + "\"", SFUtils.monospace(handler.description), false);
 				
 				Collections.sort(commands);
-				if(commands.size() > 0)embed.addField("Commandes :", Utils.monospace(Utils.snapFormat(commands, 7, 2)), true);
+				if(commands.size() > 0)embed.addField("Commandes :", SFUtils.monospace(SFUtils.snapFormat(commands, 7, 2)), true);
 				
 				Collections.sort(groups);
-				if(groups.size() > 0)embed.addField("Groupes :", Utils.monospace(Utils.snapFormat(groups, 7, 2)), true);
+				if(groups.size() > 0)embed.addField("Groupes :", SFUtils.monospace(SFUtils.snapFormat(groups, 7, 2)), true);
 				
 				ctx.reply(embed);
 				
@@ -77,7 +77,7 @@ public final class HelpCommand {
 				
 				if(handler.computedUsage != null) {
 					embed = JdaUtils.getEmbedBuilder("Commande \"" + path + "\"" + alias);
-					embed.addField(Utils.monospace(handler.computedUsage), handler.description, false);
+					embed.addField(SFUtils.monospace(handler.computedUsage), handler.description, false);
 				} else {
 					embed = JdaUtils.getEmbedBuilder();
 					embed.addField("Commande \"" + path + "\"" + alias, handler.description, false);
@@ -104,10 +104,10 @@ public final class HelpCommand {
 		}
 		
 		Collections.sort(commands);
-		if(commands.size() > 0) embed.addField("Commandes :", Utils.monospace(Utils.snapFormat(commands, 7, 2)), true);
+		if(commands.size() > 0) embed.addField("Commandes :", SFUtils.monospace(SFUtils.snapFormat(commands, 7, 2)), true);
 		
 		Collections.sort(groups);
-		if(groups.size() > 0) embed.addField("Groupes :", Utils.monospace(Utils.snapFormat(groups, 7, 2)), true);
+		if(groups.size() > 0) embed.addField("Groupes :", SFUtils.monospace(SFUtils.snapFormat(groups, 7, 2)), true);
 		
 		ctx.reply(embed);
 	}

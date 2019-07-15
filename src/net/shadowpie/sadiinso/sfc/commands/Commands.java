@@ -13,7 +13,7 @@ import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.permissions.Permissions;
-import net.shadowpie.sadiinso.sfc.utils.Utils;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;
@@ -26,13 +26,12 @@ public final class Commands {
 	public static final int COMMAND_NOT_FOUND = 1;
 	public static final int COMMAND_ERROR = 2;
 	public static final int COMMAND_PERM_ERROR = 3;
-
-	public static String err_owner_only = "Only the bot owner can execute this command";
-	public static String err_cmd_not_found = "Command not found";
-	public static String err_no_private = "This command cannot be executed in a private channel";
-	public static String err_no_server = "This command cannot be executed on a server";
-	public static String err_no_console = "This command cannot be executed on the console";
-	public static String err_no_perm = "You need to have permission \"%perm\" to execute this command";
+	
+	public static final String err_cmd_not_found = "Command not found";
+	public static final String err_no_private = "This command cannot be executed in a private channel";
+	public static final String err_no_server = "This command cannot be executed on a server";
+	public static final String err_no_console = "This command cannot be executed on the console";
+	public static final String err_no_perm = "You need to have permission \"%perm\" to execute this command";
 
 	// Suppresses default constructor, ensuring non-instantiability.
 	private Commands() {}
@@ -57,7 +56,7 @@ public final class Commands {
 	}
 
 	/**
-	 * Execute a command
+	 * Execute a command pipeline
 	 * <p>
 	 * This method can return the following values :
 	 * <ul>
@@ -75,14 +74,34 @@ public final class Commands {
 	 * @return The command end status
 	 */
 	public static int execute(CommandContext ctx) {
+		int status;
+		do {
+			status = executeInternal(ctx);
+			
+			if(status != COMMAND_SUCCESS || ctx.hasFlag(CommandContext.FLAG_BREAK_PIPELINE)) {
+				break;
+			}
+		} while (ctx.advancePipeline());
+		
+		return status;
+	}
+	
+	/**
+	 * Execute the given command
+	 * @param ctx The command
+	 * @return The command end status
+	 */
+	private static int executeInternal(CommandContext ctx) {
 		String prefix = ctx.prefix().toLowerCase();
 		AbstractCommandHandler handler = aliases.get(prefix);
 		
-		if (handler == null)
+		if (handler == null) {
 			handler = commands.get(prefix);
+		}
 
-		if (handler == null)
+		if (handler == null) {
 			return COMMAND_NOT_FOUND;
+		}
 
 		ContextOrigin origin = ctx.getOrigin();
 		byte perms = handler.basePerms;
@@ -111,8 +130,9 @@ public final class Commands {
 		}
 
 		int code = handler.execute(ctx.pullPrefix());
-		if(code == COMMAND_ERROR)
+		if(code == COMMAND_ERROR) {
 			ctx.notifyFailure();
+		}
 		
 		return code;
 	}
@@ -190,6 +210,7 @@ public final class Commands {
 	 * @param description The group description
 	 * @see #registerCommandGroup(String, String, String) registerCommandGroup(String path, String description, String allowFrom)
 	 */
+	@SuppressWarnings("unused")
 	public static void registerCommandGroup(String path, String description) {
 		registerCommandGroup(path, description, "private/server");
 	}
@@ -202,7 +223,7 @@ public final class Commands {
 	 * @param allowFrom   The group origin permissions
 	 */
 	public static void registerCommandGroup(String path, String description, String allowFrom) {
-		String[] split = Utils.splitLastIndexOf(path, ".", true);
+		String[] split = SFUtils.splitLastIndexOf(path, ".", true);
 		GroupedCommandHandler group = new GroupedCommandHandler(split[split.length - 1], description, allowFrom);
 
 		if (split.length > 1) {

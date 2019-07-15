@@ -1,55 +1,235 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import java.awt.Color;
+import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.core.entities.*;
+import net.dv8tion.jda.core.utils.JDALogger;
+import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
+import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+
+import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-
-import net.dv8tion.jda.core.entities.*;
-import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-
-import gnu.trove.list.array.TIntArrayList;
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.utils.JDALogger;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
-import net.shadowpie.sadiinso.sfc.sfc.SFC;
-import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
-import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
+import java.util.List;
 
 public abstract class CommandContext {
-
+	
+	/**
+	 * Index for retrieving values from the command pipeline read buffer
+	 */
+	public static final int PIPELINE = -1;
+	
+	/**
+	 * Indicate that the command pipeline execution should stop after the current command
+	 */
+	public static final byte FLAG_BREAK_PIPELINE = 1;
+	
 	protected static final Logger logger = JDALogger.getLog("Command Context");
 	
-	// command arguments
+	/**
+	 * Current command arguments
+	 */
 	protected String[] args;
-	protected int[] argsPos;
-	protected int currentArg = 0;
 	
-	// command raw message
-	protected String resolvedMessage;
+	/**
+	 * Command pipeline
+	 */
+	private String[][] pipeline;
 	
-	// command raw message after prefix pulling
-	protected String resolvedMessagePP;
+	/**
+	 * Current command pipeline index
+	 */
+	private int currentPipelineIndex;
 	
-	// true if the user used the mention to trigger the bot
-	protected final boolean useMention;
-
+	/**
+	 * Command pipeline read buffer (input)
+	 */
+	private SStringBuilder pipelineInBuffer;
+	
+	/**
+	 * Command pipeline write buffer (output)
+	 */
+	private SStringBuilder pipelineOutBuffer;
+	
+	/**
+	 * Indicate whether or not the user tagged the bot to execute this command
+	 */
+	private final boolean useMention;
+	
+	/**
+	 * The current flags set during this command execution
+	 */
+	private byte flags = 0;
+	
+	//############
+	//CONSTRUCTORS
+	//############
+	
 	protected CommandContext(String content, boolean useMention) {
 		this.useMention = useMention;
-		char[] command = content.toCharArray();
 		
-		extractArguments(getMessageResolved(command)); // parse command
+		List<String[]> pipe = new ArrayList<>();
+		args = CommandContextUtils.extractArguments(CommandContextUtils.resolveMentions(content, useMention), pipe);
+		initPipeline(pipe);
 	}
 	
 	protected CommandContext(String content) {
 		this.useMention = false;
-		char[] command = content.toCharArray();
 		
-		extractArguments(command); // parse command
+		List<String[]> pipe = new ArrayList<>();
+		args = CommandContextUtils.extractArguments(content.toCharArray(), pipe);
+		initPipeline(pipe);
 	}
-
+	
+	/**
+	 * initialize the command pipeline if needed
+	 * @param pipe The command pipeline contents
+	 */
+	private void initPipeline(List<String[]> pipe) {
+		if(!pipe.isEmpty()) {
+			pipeline = pipe.toArray(String[][]::new);
+			currentPipelineIndex = pipeline.length;
+			pipelineOutBuffer = new SStringBuilder();
+			pipelineInBuffer = new SStringBuilder();
+		}
+	}
+	
+	//################
+	//FLAGS OPERATIONS
+	//################
+	
+	public boolean hasFlag(int flag) {
+		return ((flags & flag) > 0);
+	}
+	
+	//###################
+	//PIPELINE OPERATIONS
+	//###################
+	
+	/**
+	 * Stop the command pipeline from executing further
+	 */
+	public void breakPipeline() {
+		flags |= FLAG_BREAK_PIPELINE;
+	}
+	
+	/**
+	 * Return whether of not the command pipe to another command
+	 */
+	@SuppressWarnings("unused")
+	public boolean hasPipeline() {
+		return (pipeline != null);
+	}
+	
+	/**
+	 * shift the current args to the next piped command
+	 * @return Whether of not the command pipe to another command
+	 */
+	@SuppressWarnings("unused")
+	public boolean advancePipeline() {
+		if(!hasPipeline()) {
+			return false;
+		}
+		
+		args = pipeline[--currentPipelineIndex];
+		if(currentPipelineIndex <= 0) {
+			pipeline = null;
+		}
+		
+		// swap and reset buffers
+		swapPipelineBuffers();
+		pipelineOutBuffer.setLength(0);
+		
+		// reset flags
+		flags = 0;
+		
+		return true;
+	}
+	
+	/**
+	 * Return the command pipeline read (in) buffer
+	 * @return A {@link StringBuilder} representing the pipeline read buffer
+	 */
+	@SuppressWarnings("unused")
+	public SStringBuilder getPipeIn() {
+		return pipelineInBuffer;
+	}
+	
+	/**
+	 * Return whether or not the command pipeline read buffer contains something
+	 */
+	public boolean hasPipeContents() {
+		return ((pipelineInBuffer == null) ? false : pipelineInBuffer.length() > 0);
+	}
+	
+	/**
+	 * Return the content of the command pipeline read buffer
+	 * @return A String representing the contents of the command pipeline read buffer
+	 */
+	@SuppressWarnings("unused")
+	public String getPipeContents() {
+		return ((pipelineInBuffer == null) ? null : pipelineInBuffer.toString());
+	}
+	
+	/**
+	 * Return the command pipeline write (out) buffer
+	 * @return A {@link StringBuilder} representing the pipeline write buffer
+	 */
+	@SuppressWarnings("unused")
+	public SStringBuilder getPipeOut() {
+		return pipelineOutBuffer;
+	}
+	
+	/**
+	 * Append {@code chars} to the command pipeline write buffer
+	 * @param chars The {@link CharSequence} to append
+	 */
+	@SuppressWarnings("unused")
+	public void writeToPipe(CharSequence chars) {
+		if(hasPipeline()) {
+			pipelineOutBuffer.append(chars);
+		}
+	}
+	
+	/**
+	 * Append {@code obj} to the command pipeline write buffer
+	 * @param obj The {@link Object} to append
+	 */
+	@SuppressWarnings("unused")
+	public void writeToPipe(Object obj) {
+		if(hasPipeline()) {
+			pipelineOutBuffer.append(obj);
+		}
+	}
+	
+	/**
+	 * Reset the commmand pipeline write buffer
+	 */
+	@SuppressWarnings("unused")
+	public void pipeReset() {
+		if(hasPipeline()) {
+			pipelineOutBuffer.setLength(0);
+		}
+	}
+	
+	/**
+	 * Swap the command pipeline in and out buffers
+	 */
+	private void swapPipelineBuffers() {
+		SStringBuilder tmp = pipelineInBuffer;
+		pipelineInBuffer = pipelineOutBuffer;
+		pipelineOutBuffer = tmp;
+	}
+	
+	//####################
+	//ARGUMENTS OPERATIONS
+	//####################
+	
 	/**
 	 * Return the current first command argument (AKA prefix)
 	 */
@@ -62,9 +242,6 @@ public abstract class CommandContext {
 	 */
 	public CommandContext pullPrefix() {
 		args = (args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
-		
-		++currentArg;
-		resolvedMessagePP = (argsPos.length > currentArg ? resolvedMessage.substring(argsPos[currentArg]) : StringUtils.EMPTY);
 		return this;
 	}
 	
@@ -77,8 +254,7 @@ public abstract class CommandContext {
 	
 	/**
 	 * Return the argument at the given index
-	 * Warning, may throw ArrayIndexOutOfBoundException
-	 * @param index The argument index
+	 * @param index The argument index or null if the index is out of bonds
 	 */
 	public String arg(int index) {
 		if(index >= args.length)
@@ -89,7 +265,7 @@ public abstract class CommandContext {
 	
 	/**
 	 * Return the number of arguments passed to the command
-	 * @return
+	 * @return The command arguments count
 	 */
 	public int argc() {
 		return args.length;
@@ -99,8 +275,13 @@ public abstract class CommandContext {
 	 * Return the given argument parsed as an 32 bits signed integer
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public int getAsInt(int index) throws NumberFormatException {
-		return Integer.parseInt(args[index]);
+		if(index == PIPELINE) {
+			return Integer.parseInt(pipelineInBuffer, 0, pipelineInBuffer.length(), 10);
+		} else {
+			return Integer.parseInt(args[index]);
+		}
 	}
 	
 	/**
@@ -108,9 +289,10 @@ public abstract class CommandContext {
 	 * In case of errors, return the fallback value
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public int getAsInt(int index, int fallback) {
 		try {
-			return Integer.parseInt(args[index]);
+			return getAsInt(index);
 		} catch(Exception ignored) {}
 		
 		return fallback;
@@ -120,8 +302,13 @@ public abstract class CommandContext {
 	 * Return the given argument parsed as a 64 bits signed integer
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public long getAsLong(int index) throws NumberFormatException {
-		return Long.parseLong(args[index]);
+		if(index == PIPELINE) {
+			return Long.parseLong(pipelineInBuffer, 0, pipelineInBuffer.length(), 10);
+		} else {
+			return Long.parseLong(args[index]);
+		}
 	}
 	
 	/**
@@ -129,9 +316,10 @@ public abstract class CommandContext {
 	 * In case of errors, return the fallback value
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public long getAsLong(int index, long fallback) {
 		try {
-			return Long.parseLong(args[index]);
+			return getAsLong(index);
 		} catch(Exception ignored) {}
 		
 		return fallback;
@@ -141,8 +329,13 @@ public abstract class CommandContext {
 	 * Return the given argument parsed as a double
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public double getAsDouble(int index) throws NumberFormatException {
-		return Double.parseDouble(args[index]);
+		if(index == PIPELINE) {
+			return Double.parseDouble(pipelineInBuffer.toString());
+		} else {
+			return Double.parseDouble(args[index]);
+		}
 	}
 	
 	/**
@@ -150,9 +343,10 @@ public abstract class CommandContext {
 	 * In case of errors, return the fallback value
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public double getAsDouble(int index, double fallback) {
 		try {
-			return Double.parseDouble(args[index]);
+			return getAsDouble(index);
 		} catch(Exception ignored) {}
 		
 		return fallback;
@@ -162,8 +356,13 @@ public abstract class CommandContext {
 	 * Return the given argument parsed as a float
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public float getAsFloat(int index) throws NumberFormatException {
-		return Float.parseFloat(args[index]);
+		if(index == PIPELINE) {
+			return Float.parseFloat(pipelineInBuffer.toString());
+		} else {
+			return Float.parseFloat(args[index]);
+		}
 	}
 	
 	/**
@@ -171,9 +370,10 @@ public abstract class CommandContext {
 	 * In case of errors, return the fallback value
 	 * @param index The argument index
 	 */
-	public float getAsLong(int index, float fallback) {
+	@SuppressWarnings("unused")
+	public float getAsFloat(int index, float fallback) {
 		try {
-			return Float.parseFloat(args[index]);
+			return getAsFloat(index);
 		} catch(Exception ignored) {}
 		
 		return fallback;
@@ -183,8 +383,13 @@ public abstract class CommandContext {
 	 * Return the given argument parsed as a boolean
 	 * @param index The argument index
 	 */
+	@SuppressWarnings("unused")
 	public boolean getAsBoolean(int index) {
-		return Boolean.parseBoolean(args[index]);
+		if(index == PIPELINE) {
+			return Boolean.parseBoolean(pipelineInBuffer.toString());
+		} else {
+			return Boolean.parseBoolean(args[index]);
+		}
 	}
 	
 	/**
@@ -194,13 +399,8 @@ public abstract class CommandContext {
 	 * @param index The argument index
 	 * @return The user or null if an error occured
 	 */
-	public User getAsUser(int index) {
-		try {
-			return SFC.getJDA().retrieveUserById(args[index]).complete();
-		} catch (Exception e) {
-			return null;
-		}
-	}
+	@SuppressWarnings("unused")
+	public abstract User getAsUser(int index);
 	
 	/**
 	 * Return the given argument parsed as a member
@@ -211,6 +411,7 @@ public abstract class CommandContext {
 	 * @param index The argument index
 	 * @return The member or null if an error occured or if the command was not sent in a server
 	 */
+	@SuppressWarnings("unused")
 	public abstract Member getAsMember(int index);
 	
 	/**
@@ -222,6 +423,7 @@ public abstract class CommandContext {
 	 * @param index The argument index
 	 * @return The role or null if an error occured or if the command was not sent in a server
 	 */
+	@SuppressWarnings("unused")
 	public abstract Role getAsRole(int index);
 	
 	/**
@@ -233,6 +435,7 @@ public abstract class CommandContext {
 	 * @param index The argument index
 	 * @return The channel or null if an error occured or if the command was not sent in a server
 	 */
+	@SuppressWarnings("unused")
 	public abstract TextChannel getAsTextChannel(int index);
 	
 	/**
@@ -244,6 +447,7 @@ public abstract class CommandContext {
 	 * @param index The argument index
 	 * @return The channel or null if an error occured or if the command was not sent in a server
 	 */
+	@SuppressWarnings("unused")
 	public abstract VoiceChannel getAsVoiceChannel(int index);
 	
 	/**
@@ -255,15 +459,18 @@ public abstract class CommandContext {
 	 * @param index The argument index
 	 * @return The Category or null if an error occured or if the command was not sent in a server
 	 */
+	@SuppressWarnings("unused")
 	public abstract Category getAsCategory(int index);
 	
 	/**
 	 * Pack all the arguments in one string
 	 */
+	@SuppressWarnings("unused")
 	public String packArgs() {
-		StringBuilder builder = new StringBuilder(resolvedMessagePP.length());
-		for(int t = 0; t < args.length; t++)
+		StringBuilder builder = new StringBuilder(32);
+		for(int t = 0; t < args.length; t++) {
 			builder.append(args[t]);
+		}
 		
 		return builder.toString();
 	}
@@ -272,8 +479,9 @@ public abstract class CommandContext {
 	 * Pack all the arguments in one string, add the specified string between each argument
 	 * @param between The string to add between two arguments
 	 */
+	@SuppressWarnings("unused")
 	public String packArgs(String between) {
-		StringBuilder builder = new StringBuilder(resolvedMessagePP.length() + (between.length() * args.length));
+		StringBuilder builder = new StringBuilder(32);
 		for(int t = 0; t < args.length - 1; t++) {
 			builder.append(args[t]);
 			builder.append(between);
@@ -287,8 +495,9 @@ public abstract class CommandContext {
 	 * Pack all the arguments in one string
 	 * @param start The first argument to pack
 	 */
+	@SuppressWarnings("unused")
 	public String packArgs(int start) {
-		StringBuilder builder = new StringBuilder(resolvedMessagePP.length());
+		StringBuilder builder = new StringBuilder(32);
 		start = Math.max(0, start);
 		
 		for(int t = start; t < args.length; t++)
@@ -302,8 +511,9 @@ public abstract class CommandContext {
 	 * @param start The first argument to pack
 	 * @param between The string to add between two arguments
 	 */
+	@SuppressWarnings("unused")
 	public String packArgs(int start, String between) {
-		StringBuilder builder = new StringBuilder(resolvedMessagePP.length() + (between.length() * (args.length - start)));
+		StringBuilder builder = new StringBuilder(32);
 		start = Math.max(0, start);
 		
 		for(int t = start; t < args.length - 1; t++) {
@@ -320,8 +530,9 @@ public abstract class CommandContext {
 	 * @param start The first argument to pack
 	 * @param end The last argument to pack
 	 */
+	@SuppressWarnings("unused")
 	public String packArgs(int start, int end) {
-		StringBuilder builder = new StringBuilder(resolvedMessagePP.length());
+		StringBuilder builder = new StringBuilder(32);
 		end = Math.min(args.length - 2, end);
 		start = Math.max(0, start);
 		
@@ -337,9 +548,10 @@ public abstract class CommandContext {
 	 * @param end The last argument to pack
 	 * @param between The string to add between two arguments
 	 */
+	@SuppressWarnings("unused")
 	public String packArgs(int start, int end, String between) {
 		end = Math.min(args.length - 2, end);
-		StringBuilder builder = new StringBuilder(resolvedMessagePP.length() + (between.length() * (args.length - start)));
+		StringBuilder builder = new StringBuilder(32);
 		
 		for(int t = start; t <= end; t++) {
 			builder.append(args[t]);
@@ -348,13 +560,6 @@ public abstract class CommandContext {
 		
 		builder.append(args[end]); // add the final argument
 		return builder.toString();
-	}
-
-	/**
-	 * Return the raw context message (with IDs resolved)
-	 */
-	public String rawMessage() {
-		return resolvedMessagePP;
 	}
 
 	/**
@@ -375,6 +580,7 @@ public abstract class CommandContext {
 	/**
 	 * Return whether the user use the mention or the tag to trigger the bot
 	 */
+	@SuppressWarnings("unused")
 	public boolean usedMention() {
 		return useMention;
 	}
@@ -382,27 +588,32 @@ public abstract class CommandContext {
 	/**
 	 * Return the message channel that the command was sent in.
 	 */
+	@SuppressWarnings("unused")
 	public abstract MessageChannel getChannel();
 	
 	/**
 	 * Return the id of the user as a string
 	 */
+	@SuppressWarnings("unused")
 	public abstract String getAuthorId();
 	
 	/**
 	 * Return the id of the user as a long
 	 */
+	@SuppressWarnings("unused")
 	public abstract long getAuthorIdLong();
 	
 	/**
 	 * Return the message author
 	 */
+	@SuppressWarnings("unused")
 	public abstract User getAuthor();
 	
 	/**
 	 * Return the message author as mention
 	 */
-	public abstract String getUserAsMention();
+	@SuppressWarnings("unused")
+	public abstract String getAuthorAsMention();
 	
 	//#######################
 	// quick reply & reaction
@@ -412,26 +623,21 @@ public abstract class CommandContext {
 	 * Send a message in the channel that the command was sent in.
 	 * @param str The message to send
 	 */
+	@SuppressWarnings("unused")
 	public abstract void reply(String str);
 	
 	/**
 	 * Send a message in the context channel
 	 * @param embed The message to send
 	 */
+	@SuppressWarnings("unused")
 	public abstract void reply(MessageEmbed embed);
-	
-	/**
-	 * Send a message in the context channel as an embed with the specified theme color
-	 * @param message The message to send
-	 */
-	public void replyAsEmbed(String message) {
-		replyAsEmbed(message, ConfigHandler.color_theme());
-	}
 	
 	/**
 	 * Send a message in the context channel as an embed with the specified info color
 	 * @param message The message to send
 	 */
+	@SuppressWarnings("unused")
 	public void info(String message) {
 		replyAsEmbed(message, ConfigHandler.color_info());
 	}
@@ -440,6 +646,7 @@ public abstract class CommandContext {
 	 * Send a message in the context channel as an embed with the specified warn color
 	 * @param message The message to send
 	 */
+	@SuppressWarnings("unused")
 	public void warn(String message) {
 		replyAsEmbed(message, ConfigHandler.color_warn());
 	}
@@ -448,20 +655,32 @@ public abstract class CommandContext {
 	 * Send a message in the context channel as an embed with the specified error color
 	 * @param message The message to send
 	 */
+	@SuppressWarnings("unused")
 	public void error(String message) {
 		replyAsEmbed(message, ConfigHandler.color_error());
+	}
+	
+	/**
+	 * Send a message in the context channel as an embed with the specified theme color
+	 * @param message The message to send
+	 */
+	@SuppressWarnings("unused")
+	public void replyAsEmbed(String message) {
+		replyAsEmbed(message, ConfigHandler.color_theme());
 	}
 	
 	/**
 	 * Send a message in the context channel as an embed with the specified color
 	 * @param message The message to send
 	 */
+	@SuppressWarnings("unused")
 	public abstract void replyAsEmbed(String message, Color color);
 	
 	/**
 	 * Send a message in the channel that the command was sent in.
 	 * @param builder The message to send
 	 */
+	@SuppressWarnings("unused")
 	public void reply(EmbedBuilder builder) {
 		reply(builder.build());
 	}
@@ -470,12 +689,14 @@ public abstract class CommandContext {
 	 * Add a reaction to the message that contain the command.
 	 * @param unicode The emote in unicode format
 	 */
+	@SuppressWarnings("unused")
 	public abstract void react(String unicode);
 	
 	/**
 	 * Send a file to the channel
 	 * @param file The file to send
 	 */
+	@SuppressWarnings("unused")
 	public abstract void sendFile(File file);
 	
 	/**
@@ -483,6 +704,7 @@ public abstract class CommandContext {
 	 * @param file The file to send
 	 * @param name The file name
 	 */
+	@SuppressWarnings("unused")
 	public abstract void sendFile(File file, String name);
 	
 	/**
@@ -490,12 +712,14 @@ public abstract class CommandContext {
 	 * @param file The file to send
 	 * @param name The file name
 	 */
+	@SuppressWarnings("unused")
 	public abstract void sendFile(byte[] file, String name);
 	
 	/**
 	 * Send an image to the channel
 	 * @param img The image to send
 	 */
+	@SuppressWarnings("unused")
 	public abstract void sendImage(RenderedImage img);
 	
 	/**
@@ -503,148 +727,27 @@ public abstract class CommandContext {
 	 * @param img The image to send
 	 * @param name The image name
 	 */
+	@SuppressWarnings("unused")
 	public abstract void sendImage(RenderedImage img, String name);
 	
 	/**
 	 * Add {@link JdaUtils#EMOJI_ACCEPT} as a reaction to the command message
 	 */
+	@SuppressWarnings("unused")
 	public abstract void notifySuccess();
 	
 	/**
 	 * Add {@link JdaUtils#EMOJI_DENY} as a reaction to the command message
 	 */
+	@SuppressWarnings("unused")
 	public abstract void notifyFailure();
-	
-	//################
-	// Utils & private
-	//################
 	
 	/**
 	 * Return the representation of the arguments passed to the command as a String
 	 */
 	@Override
 	public String toString() {
-		return Arrays.toString(args);
+		return "args=" + Arrays.toString(args) + ";pipeline=" + SFUtils.deepToString(pipeline) + ";pIndex=" + currentPipelineIndex;
 	}
-
-	/**
-	 * return message without caller (prefix or pre-mentions) and all mentions
-	 * resolved
-	 * 
-	 * useMention : true if the command use the "mention system" to call the bot,
-	 * false if it use the tag system
-	 */
-	protected char[] getMessageResolved(char[] msg) {
-		int index = 0;
-
-		// remove caller
-		index += (useMention ? SFC.selfMention().length() : ConfigHandler.bot_tag().length());
-		
-		// remove post-caller whitespace
-		while (Character.isWhitespace(msg[index]))
-			++index;
-		
-		// resolve mentions (skip resolving if message size is less than 21 chars : no possible IDs left to resolve)
-		if (msg.length - index > 20) {
-			SStringBuilder builder = new SStringBuilder(msg.length - index); // ensure that the internal buffer will nether growth
-			int lastPush = msg.length - 21;
-			
-			resolve: for (int t = index, len = msg.length - 20; t < len; t++) { // prevent "msg.length - 20" to be re-calculated each loop turn
-				if ((msg[t] == '<') && !Character.isDigit(msg[t + 1])) {
-					if (!Character.isDigit(msg[t + 2])) {
-						if (msg[t + 21] != '>') {
-							builder.push(msg[t]);
-							continue resolve;
-						}
-						
-						for (int u = t + 3, len2 = t + 21; u < len2; u++) {
-							if (!Character.isDigit(msg[u])) {
-								builder.push(msg[t]);
-								continue resolve;
-							}
-						}
-
-						builder.push(msg, t + 3, 18);// push digits
-						t += 21;
-					} else {
-						if (msg[t + 20] != '>') {
-							builder.push(msg[t]);
-							continue resolve;
-						}
-
-						for (int u = t + 3, len2 = t + 20; u < len2; u++) {
-							if (!Character.isDigit(msg[u])) {
-								builder.push(msg[t]);
-								continue resolve;
-							}
-						}
-
-						builder.push(msg, t + 2, 18);// push digits
-						t += 20;
-					}
-				} else {
-					builder.push(msg[t]);
-				}
-				
-				lastPush = t;
-			}
-
-			builder.push(msg, lastPush + 1);
-			resolvedMessage = builder.toString();
-			return builder.copy();
-		} else {
-			char[] tmp = Arrays.copyOfRange(msg, index, msg.length);
-			resolvedMessage = new String(tmp);
-			return tmp;
-		}
-	}
-
-	protected void extractArguments(char[] cmd) {
-		ArrayList<char[]> tmpArgs = new ArrayList<>();
-		TIntArrayList tmpArgsPos = new TIntArrayList(); // position of the arguments in the resolved message
-		SStringBuilder builder = new SStringBuilder();
-		boolean inStr = false; // is current argument escaped
-		boolean wParseState = false; // is current argument parsing started
-		int t;
-		
-		/* separate command arguments */
-		for (t = 0; t < cmd.length; t++) {
-			if (cmd[t] == '\"') {
-				if (!inStr && !wParseState)
-					inStr = true;
-				else if (inStr)
-					inStr = false;
-				else
-					builder.push(cmd[t]);
-			} else if (Character.isWhitespace(cmd[t]) && !inStr) {
-				if (builder.empty()) // auto trim
-					continue;
-
-				tmpArgsPos.add(t - builder.length());
-				tmpArgs.add(builder.copy());
-				builder.reset();
-				wParseState = false;
-			} else {
-				wParseState = true;
-				builder.push(cmd[t]);
-			}
-		}
-
-		tmpArgsPos.add(t - builder.length());
-
-		/* reconstruct arguments */
-		args = new String[tmpArgs.size() + 1];
-		t = 0;
-		for (char[] arg : tmpArgs)
-			args[t++] = new String(arg);
-
-		/* add last argument */
-		if (inStr)
-			builder.insert(0, "\""); // add " at the beginning if still in escaped string
-		args[t] = builder.toString();
-
-		argsPos = new int[tmpArgsPos.size()];
-		for (t = 1; t < tmpArgsPos.size(); t++)
-			argsPos[t] = tmpArgsPos.getQuick(t);
-	}
+	
 }
