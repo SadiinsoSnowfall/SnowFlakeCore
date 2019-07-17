@@ -1,16 +1,15 @@
 package net.shadowpie.sadiinso.sfc.webapi;
 
+import net.dv8tion.jda.core.utils.JDALogger;
+import net.shadowpie.sadiinso.sfc.webapi.WebEndpointHandler.WebEventCaller;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.json.JSONObject;
-import org.slf4j.Logger;
-
-import net.dv8tion.jda.core.utils.JDALogger;
-import net.shadowpie.sadiinso.sfc.webapi.WebEndpointHandler.WebEventCaller;
 
 public class WebEndpoints {
 

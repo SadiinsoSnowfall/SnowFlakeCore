@@ -15,21 +15,15 @@
  */
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
-import java.awt.Color;
+import net.dv8tion.jda.core.entities.*;
+import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
+
+import javax.annotation.Nullable;
+import java.awt.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Nullable;
-
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Message;
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.entities.User;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
-import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 
 /**
  * A frame for wrapping a menu that waits on forms of user input such as reactions,

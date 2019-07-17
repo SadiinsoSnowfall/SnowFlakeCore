@@ -1,13 +1,13 @@
 package net.shadowpie.sadiinso.sfc.config;
 
-import java.awt.Color;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-
 import org.apache.commons.io.FileUtils;
 import org.json.ordered.JSONException;
 import org.json.ordered.OrderedJSONObject;
+
+import java.awt.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 public class ConfigHandler {
 

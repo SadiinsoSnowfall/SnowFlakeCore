@@ -1,5 +1,6 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
+import gnu.trove.list.array.TIntArrayList;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
@@ -90,12 +91,13 @@ public class CommandContextUtils {
 		}
 	}
 	
-	public static String[] extractArguments(char[] cmd, List<String[]> pipe) {
+	public static CommandContextFrame extractArguments(char[] cmd, List<CommandContextFrame> pipe) {
 		return extractArguments(cmd, 0, pipe);
 	}
 	
-	public static String[] extractArguments(char[] cmd, int from, List<String[]> pipe) {
+	private static CommandContextFrame extractArguments(char[] cmd, int from, List<CommandContextFrame> pipe) {
 		ArrayList<String> tmpArgs = new ArrayList<>();
+		TIntArrayList crs = new TIntArrayList();
 		SStringBuilder builder = new SStringBuilder(); // String buffer to build the arguments
 		boolean inStr = false, escapeNext = false;
 		int t, pindex = -1;
@@ -105,9 +107,15 @@ public class CommandContextUtils {
 			if(Character.isWhitespace(cmd[t])) {
 				if(inStr) {
 					builder.append(cmd[t]);
-				} else if(!builder.isEmpty()) {
-					tmpArgs.add(builder.toString());
-					builder.reset();
+				} else {
+					if(!builder.isEmpty()) {
+						tmpArgs.add(builder.toString());
+						builder.reset();
+					}
+					
+					if((cmd[t] == '\n') && (crs.isEmpty() || (crs.get(crs.size() - 1) != tmpArgs.size()))) {
+						crs.add(tmpArgs.size());
+					}
 				}
 				continue;
 			}
@@ -153,7 +161,7 @@ public class CommandContextUtils {
 			pipe.add(extractArguments(cmd, pindex, pipe));
 		}
 		
-		return args;
+		return new CommandContextFrame(args, (crs.isEmpty() ? null : crs.toArray()));
 	}
 	
 }

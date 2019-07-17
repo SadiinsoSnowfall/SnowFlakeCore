@@ -377,14 +377,18 @@ public class SFUtils {
 				buf.append(Arrays.toString((boolean[]) o));
 			} else { // element is an array of object references
 				Object[] objs = (Object[]) o;
-				int last = objs.length - 1;
-				buf.append('[');
-				for (int t = 0; t < last; t++) {
-					deepToString(objs[t], buf, dejaVu);
-					buf.append(", ");
+				if(objs.length == 0) {
+					buf.append("[]");
+				} else {
+					int last = objs.length - 1;
+					buf.append('[');
+					for (int t = 0; t < last; t++) {
+						deepToString(objs[t], buf, dejaVu);
+						buf.append(", ");
+					}
+					deepToString(objs[last], buf, dejaVu);
+					buf.append(']');
 				}
-				deepToString(objs[last], buf, dejaVu);
-				buf.append(']');
 			}
 		} else if (o instanceof Map) {
 			Iterator<Map.Entry<?, ?>> iter = ((Set<Map.Entry<?, ?>>) ((Map) o).entrySet()).iterator();

@@ -1,9 +1,8 @@
 package net.shadowpie.sadiinso.sfc.permissions;
 
-import org.slf4j.Logger;
-
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
+import org.slf4j.Logger;
 
 public final class OriginPerms {
 	

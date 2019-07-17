@@ -88,43 +88,49 @@ public class SFCListener extends ListenerAdapter {
 		// drop empty message and bot messages */
 		if (event.getMessage().getContentRaw().isEmpty() || event.getAuthor().isBot())
 			return;
-
+		
 		// apply filters
-		for (AbstractFilter filter : privateFilters)
-			if (!filter.applyFilter(event.getMessage()))
+		for (AbstractFilter filter : privateFilters) {
+			if (!filter.applyFilter(event.getMessage())) {
 				return;
-
+			}
+		}
+		
 		if (ConfigHandler.enable_commands()) {
 
 			// build command context (null if the message is not a command)
 			CommandContext ctx = DiscordCommandContext.getContext(event.getMessage());
 
 			// execute the command
-			if (ctx != null)
+			if (ctx != null) {
 				Commands.execute(ctx);
+			}
 		}
 	}
 
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
 		// drop empty messages
-		if (event.getMessage().getContentRaw().isEmpty())
+		if (event.getMessage().getContentRaw().isEmpty()) {
 			return;
+		}
 
 		// apply filters
-		for (AbstractFilter filter : guildFilters)
-			if (!filter.applyFilter(event.getMessage()))
+		for (AbstractFilter filter : guildFilters) {
+			if (!filter.applyFilter(event.getMessage())) {
 				return;
+			}
+		}
 
 		// execute command
 		if (ConfigHandler.enable_commands()) {
-
 			// build command context (null if the message is not a command)
 			CommandContext ctx = DiscordCommandContext.getContext(event.getMessage());
 
 			// execute the command
-			if (ctx != null)
+			if (ctx != null) {
 				Commands.execute(ctx);
+			}
 		}
 	}
 	

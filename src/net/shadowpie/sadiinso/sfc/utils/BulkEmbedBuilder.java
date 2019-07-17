@@ -1,12 +1,12 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
-import java.awt.Color;
-import java.util.LinkedList;
-import java.util.List;
-
 import net.dv8tion.jda.core.entities.MessageChannel;
 import net.dv8tion.jda.core.entities.MessageEmbed;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+
+import java.awt.*;
+import java.util.LinkedList;
+import java.util.List;
 
 public class BulkEmbedBuilder {
 

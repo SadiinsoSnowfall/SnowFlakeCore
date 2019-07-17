@@ -1,17 +1,15 @@
 package net.shadowpie.sadiinso.sfc.db;
 
-import java.sql.Connection;
-import java.sql.SQLException;
-
-import org.slf4j.Logger;
-
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-
 import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
+import org.slf4j.Logger;
+
+import java.sql.Connection;
+import java.sql.SQLException;
 
 public class DB {
 	

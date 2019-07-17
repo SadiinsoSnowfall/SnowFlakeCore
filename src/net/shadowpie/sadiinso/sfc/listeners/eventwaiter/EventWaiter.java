@@ -1,16 +1,12 @@
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import net.dv8tion.jda.core.events.Event;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import java.util.function.Predicate;
-
-import net.dv8tion.jda.core.events.Event;
 
 /**
  * EventWaiter class, used to subscribe to certains events under certains conditions

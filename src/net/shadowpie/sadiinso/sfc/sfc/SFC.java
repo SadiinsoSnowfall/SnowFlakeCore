@@ -1,13 +1,5 @@
 package net.shadowpie.sadiinso.sfc.sfc;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.security.auth.login.LoginException;
-
-import org.slf4j.Logger;
-
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDA;
 import net.dv8tion.jda.core.JDABuilder;
@@ -24,6 +16,12 @@ import net.shadowpie.sadiinso.sfc.listeners.ConsoleListener;
 import net.shadowpie.sadiinso.sfc.listeners.SFCListener;
 import net.shadowpie.sadiinso.sfc.permissions.Permissions;
 import net.shadowpie.sadiinso.sfc.webapi.WebAPI;
+import org.slf4j.Logger;
+
+import javax.security.auth.login.LoginException;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SFC {
 

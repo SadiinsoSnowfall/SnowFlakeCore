@@ -1,5 +1,6 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
+import gnu.trove.list.array.TIntArrayList;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.utils.JDALogger;
@@ -7,7 +8,6 @@ import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 import net.shadowpie.sadiinso.sfc.utils.SFUtils;
 import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
 import java.awt.*;
@@ -34,12 +34,12 @@ public abstract class CommandContext {
 	/**
 	 * Current command arguments
 	 */
-	protected String[] args;
+	private CommandContextFrame cframe;
 	
 	/**
 	 * Command pipeline
 	 */
-	private String[][] pipeline;
+	private CommandContextFrame[] pipeline;
 	
 	/**
 	 * Current command pipeline index
@@ -73,16 +73,16 @@ public abstract class CommandContext {
 	protected CommandContext(String content, boolean useMention) {
 		this.useMention = useMention;
 		
-		List<String[]> pipe = new ArrayList<>();
-		args = CommandContextUtils.extractArguments(CommandContextUtils.resolveMentions(content, useMention), pipe);
+		List<CommandContextFrame> pipe = new ArrayList<>();
+		cframe = CommandContextUtils.extractArguments(CommandContextUtils.resolveMentions(content, useMention), pipe);
 		initPipeline(pipe);
 	}
 	
 	protected CommandContext(String content) {
 		this.useMention = false;
 		
-		List<String[]> pipe = new ArrayList<>();
-		args = CommandContextUtils.extractArguments(content.toCharArray(), pipe);
+		List<CommandContextFrame> pipe = new ArrayList<>();
+		cframe = CommandContextUtils.extractArguments(content.toCharArray(), pipe);
 		initPipeline(pipe);
 	}
 	
@@ -90,9 +90,9 @@ public abstract class CommandContext {
 	 * initialize the command pipeline if needed
 	 * @param pipe The command pipeline contents
 	 */
-	private void initPipeline(List<String[]> pipe) {
+	private void initPipeline(List<CommandContextFrame> pipe) {
 		if(!pipe.isEmpty()) {
-			pipeline = pipe.toArray(String[][]::new);
+			pipeline = pipe.toArray(CommandContextFrame[]::new);
 			currentPipelineIndex = pipeline.length;
 			pipelineOutBuffer = new SStringBuilder();
 			pipelineInBuffer = new SStringBuilder();
@@ -136,14 +136,13 @@ public abstract class CommandContext {
 			return false;
 		}
 		
-		args = pipeline[--currentPipelineIndex];
+		cframe = pipeline[--currentPipelineIndex];
 		if(currentPipelineIndex <= 0) {
 			pipeline = null;
 		}
 		
 		// swap and reset buffers
 		swapPipelineBuffers();
-		pipelineOutBuffer.setLength(0);
 		
 		// reset flags
 		flags = 0;
@@ -164,7 +163,7 @@ public abstract class CommandContext {
 	 * Return whether or not the command pipeline read buffer contains something
 	 */
 	public boolean hasPipeContents() {
-		return ((pipelineInBuffer == null) ? false : pipelineInBuffer.length() > 0);
+		return ((pipelineInBuffer != null) && !pipelineInBuffer.isEmpty());
 	}
 	
 	/**
@@ -221,9 +220,13 @@ public abstract class CommandContext {
 	 * Swap the command pipeline in and out buffers
 	 */
 	private void swapPipelineBuffers() {
+		// swap buffers
 		SStringBuilder tmp = pipelineInBuffer;
 		pipelineInBuffer = pipelineOutBuffer;
 		pipelineOutBuffer = tmp;
+		
+		// empty out buffer
+		pipelineOutBuffer.setLength(0);
 	}
 	
 	//####################
@@ -234,14 +237,30 @@ public abstract class CommandContext {
 	 * Return the current first command argument (AKA prefix)
 	 */
 	public String prefix() {
-		return (args.length > 0 ? args[0] : StringUtils.EMPTY);
+		return (cframe.args.length > 0 ? cframe.args[0] : null);
 	}
 	
 	/**
 	 * Rebuild the context without the first command prefix
 	 */
 	public CommandContext pullPrefix() {
-		args = (args.length > 1 ? Arrays.copyOfRange(args, 1, args.length) : new String[0]);
+		if(cframe.args.length > 1) {
+			cframe.args = Arrays.copyOfRange(cframe.args, 1, cframe.args.length);
+			
+			// shift and optimize the carriage return index array
+			if(cframe.crs != null) {
+				TIntArrayList tarr = new TIntArrayList();
+				for (int t = 0; t < cframe.crs.length; t++) {
+					if((cframe.crs[t] - 1) > 0) {
+						tarr.add(cframe.crs[t] - 1);
+					}
+				}
+				cframe.crs = (tarr.isEmpty() ? null : tarr.toArray());
+			}
+		} else {
+			cframe.args = new String[0];
+		}
+		
 		return this;
 	}
 	
@@ -249,7 +268,31 @@ public abstract class CommandContext {
 	 * Return the arguments passed to the command
 	 */
 	public String[] args() {
-		return args;
+		return cframe.args;
+	}
+	
+	/**
+	 * Split the arguments at each newline
+	 */
+	@SuppressWarnings("unused")
+	public String[][] splitLines() {
+		if(cframe.crs == null) {
+			return new String[][] { cframe.args };
+		}
+		
+		String[][] split = new String[cframe.crs.length + 1][];
+		
+		int prev = 0;
+		int index = 0;
+		for(int t = 0; t < cframe.crs.length; t++) {
+			split[index] = Arrays.copyOfRange(cframe.args, prev, cframe.crs[t]);
+			prev = cframe.crs[t];
+			++index;
+		}
+		
+		split[index] = Arrays.copyOfRange(cframe.args, prev, cframe.args.length);
+		
+		return split;
 	}
 	
 	/**
@@ -257,10 +300,7 @@ public abstract class CommandContext {
 	 * @param index The argument index or null if the index is out of bonds
 	 */
 	public String arg(int index) {
-		if(index >= args.length)
-			return null;
-		
-		return args[index];
+		return ((index < cframe.args.length) ? cframe.args[index] : null);
 	}
 	
 	/**
@@ -268,7 +308,7 @@ public abstract class CommandContext {
 	 * @return The command arguments count
 	 */
 	public int argc() {
-		return args.length;
+		return cframe.args.length;
 	}
 	
 	/**
@@ -280,7 +320,7 @@ public abstract class CommandContext {
 		if(index == PIPELINE) {
 			return Integer.parseInt(pipelineInBuffer, 0, pipelineInBuffer.length(), 10);
 		} else {
-			return Integer.parseInt(args[index]);
+			return Integer.parseInt(cframe.args[index]);
 		}
 	}
 	
@@ -307,7 +347,7 @@ public abstract class CommandContext {
 		if(index == PIPELINE) {
 			return Long.parseLong(pipelineInBuffer, 0, pipelineInBuffer.length(), 10);
 		} else {
-			return Long.parseLong(args[index]);
+			return Long.parseLong(cframe.args[index]);
 		}
 	}
 	
@@ -334,7 +374,7 @@ public abstract class CommandContext {
 		if(index == PIPELINE) {
 			return Double.parseDouble(pipelineInBuffer.toString());
 		} else {
-			return Double.parseDouble(args[index]);
+			return Double.parseDouble(cframe.args[index]);
 		}
 	}
 	
@@ -361,7 +401,7 @@ public abstract class CommandContext {
 		if(index == PIPELINE) {
 			return Float.parseFloat(pipelineInBuffer.toString());
 		} else {
-			return Float.parseFloat(args[index]);
+			return Float.parseFloat(cframe.args[index]);
 		}
 	}
 	
@@ -388,7 +428,7 @@ public abstract class CommandContext {
 		if(index == PIPELINE) {
 			return Boolean.parseBoolean(pipelineInBuffer.toString());
 		} else {
-			return Boolean.parseBoolean(args[index]);
+			return Boolean.parseBoolean(cframe.args[index]);
 		}
 	}
 	
@@ -467,12 +507,7 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public String packArgs() {
-		StringBuilder builder = new StringBuilder(32);
-		for(int t = 0; t < args.length; t++) {
-			builder.append(args[t]);
-		}
-		
-		return builder.toString();
+		return packArgs(0, cframe.args.length);
 	}
 	
 	/**
@@ -481,14 +516,7 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public String packArgs(String between) {
-		StringBuilder builder = new StringBuilder(32);
-		for(int t = 0; t < args.length - 1; t++) {
-			builder.append(args[t]);
-			builder.append(between);
-		}
-		
-		builder.append(args[args.length - 1]); // add the final argument
-		return builder.toString();
+		return packArgs(0, cframe.args.length, between);
 	}
 	
 	/**
@@ -497,13 +525,7 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public String packArgs(int start) {
-		StringBuilder builder = new StringBuilder(32);
-		start = Math.max(0, start);
-		
-		for(int t = start; t < args.length; t++)
-			builder.append(args[t]);
-		
-		return builder.toString();
+		return packArgs(start, cframe.args.length);
 	}
 	
 	/**
@@ -513,16 +535,7 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public String packArgs(int start, String between) {
-		StringBuilder builder = new StringBuilder(32);
-		start = Math.max(0, start);
-		
-		for(int t = start; t < args.length - 1; t++) {
-			builder.append(args[t]);
-			builder.append(between);
-		}
-		
-		builder.append(args[args.length - 1]); // add the final argument
-		return builder.toString();
+		return packArgs(start, cframe.args.length, between);
 	}
 	
 	/**
@@ -533,11 +546,11 @@ public abstract class CommandContext {
 	@SuppressWarnings("unused")
 	public String packArgs(int start, int end) {
 		StringBuilder builder = new StringBuilder(32);
-		end = Math.min(args.length - 2, end);
-		start = Math.max(0, start);
+		end = Math.min(cframe.args.length, end);
 		
-		for(int t = start; t <= end; t++)
-			builder.append(args[t]);
+		for(int t = Math.max(0, start); t < end; t++) {
+			builder.append(cframe.args[t]);
+		}
 		
 		return builder.toString();
 	}
@@ -550,15 +563,15 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public String packArgs(int start, int end, String between) {
-		end = Math.min(args.length - 2, end);
 		StringBuilder builder = new StringBuilder(32);
+		end = Math.min(cframe.args.length - 1, end);
 		
-		for(int t = start; t <= end; t++) {
-			builder.append(args[t]);
+		for(int t = start; t < end; t++) {
+			builder.append(cframe.args[t]);
 			builder.append(between);
 		}
 		
-		builder.append(args[end]); // add the final argument
+		builder.append(cframe.args[end]); // add the final argument
 		return builder.toString();
 	}
 
@@ -747,7 +760,7 @@ public abstract class CommandContext {
 	 */
 	@Override
 	public String toString() {
-		return "args=" + Arrays.toString(args) + ";pipeline=" + SFUtils.deepToString(pipeline) + ";pIndex=" + currentPipelineIndex;
+		return "args=" + Arrays.toString(cframe.args) + ";pipeline=" + SFUtils.deepToString(pipeline) + ";pIndex=" + currentPipelineIndex;
 	}
 	
 }
