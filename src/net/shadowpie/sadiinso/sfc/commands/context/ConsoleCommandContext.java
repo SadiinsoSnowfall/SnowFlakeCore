@@ -93,12 +93,12 @@ public class ConsoleCommandContext extends CommandContext {
 	}
 	
 	@Override
-	public void reply(String str) {
+	public void reply(CharSequence str) {
 		System.out.println(str);
 	}
 	
 	@Override
-	public void replyAsEmbed(String message, Color color) {
+	public void replyAsEmbed(CharSequence message, Color color) {
 		System.out.println(message);
 	}
 
@@ -119,17 +119,17 @@ public class ConsoleCommandContext extends CommandContext {
 	}
 	
 	@Override
-	public void sendFile(File file, String message) {
+	public void sendFile(File file, CharSequence message) {
 		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 	
 	@Override
-	public void sendFile(byte[] file, String message) {
+	public void sendFile(byte[] file, CharSequence message) {
 		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 
 	@Override
-	public void sendImage(RenderedImage img, String message) {
+	public void sendImage(RenderedImage img, CharSequence message) {
 		logger.warn("ConsoleCommandContext#sendFile: Unsupported operation");
 	}
 

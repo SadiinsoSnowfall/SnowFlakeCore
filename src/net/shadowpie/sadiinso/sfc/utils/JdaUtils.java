@@ -40,36 +40,38 @@ public class JdaUtils {
 		return builder;
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String message) {
-		return sendAsEmbed(channel, message, null, ConfigHandler.color_theme());
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence message) {
+		return sendAsEmbed(channel, message, null, null, ConfigHandler.color_theme());
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String title, String sub) {
-		return sendAsEmbed(channel, title, sub, ConfigHandler.color_theme());
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence title, CharSequence sub) {
+		return sendAsEmbed(channel, title, sub, null, ConfigHandler.color_theme());
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String message, Color color) {
-		return sendAsEmbed(channel, message, null, color);
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence message, Color color) {
+		return sendAsEmbed(channel, message, null, null, color);
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String title, String sub, Color color) {
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence title, CharSequence sub, Color color) {
 		return sendAsEmbed(channel, title, sub, null, color);
 	}
 
-	public static MessageEmbed sendAsEmbed(MessageChannel channel, String title, String sub, String footer, Color color) {
+	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence title, CharSequence sub, CharSequence footer, Color color) {
 		EmbedBuilder builder = new EmbedBuilder();
 		builder.setColor(color);
 
-		if ((sub == null) || sub.isEmpty())
+		if ((sub == null) || (sub.length() == 0)) {
 			builder.setDescription(title);
-		else
-			builder.addField(title, sub, false);
-
-		builder.setFooter(footer, null);
-		MessageEmbed msg = builder.build();
+		} else {
+			builder.addField(SFUtils.charSeqToString(title), SFUtils.charSeqToString(sub), false);
+		}
 		
-		if(channel != null)
+		builder.setFooter(SFUtils.charSeqToString(footer), null);
+		
+		MessageEmbed msg = builder.build();
+		if(channel != null) {
 			channel.sendMessage(msg).queue();
+		}
 		
 		return msg;
 	}

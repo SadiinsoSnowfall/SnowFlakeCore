@@ -60,11 +60,7 @@ public class BaseCommands {
 	)
 	public static void onEcho(CommandContext ctx) {
 		if(ctx.argc() > 0) {
-			if(ctx.hasPipeline()) {
-				ctx.writeToPipe(ctx.packArgs(" "));
-			} else {
-				ctx.info(ctx.packArgs(" "));
-			}
+			ctx.wtpOrInfo(ctx.packArgs(" "));
 		} else {
 			if(ctx.hasPipeContents()) {
 				if(ctx.hasPipeline()) {
@@ -73,7 +69,7 @@ public class BaseCommands {
 					ctx.info(ctx.getPipeContents());
 				}
 			} else {
-				ctx.warn("Invalid parameters");
+				ctx.warn("No parameters");
 				ctx.breakPipeline();
 			}
 		}

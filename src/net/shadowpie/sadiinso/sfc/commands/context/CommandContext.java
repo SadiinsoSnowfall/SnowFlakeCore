@@ -1,6 +1,5 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import gnu.trove.list.array.TIntArrayList;
 import net.dv8tion.jda.core.EmbedBuilder;
 import net.dv8tion.jda.core.entities.*;
 import net.dv8tion.jda.core.utils.JDALogger;
@@ -19,17 +18,30 @@ import java.util.List;
 
 public abstract class CommandContext {
 	
+	protected static final Logger logger = JDALogger.getLog("Command Context");
+	
 	/**
 	 * Index for retrieving values from the command pipeline read buffer
 	 */
-	public static final int PIPELINE = -1;
+	public static final int PIPELINE = -42;
+	
+	//#####
+	//FLAGS
+	//#####
 	
 	/**
 	 * Indicate that the command pipeline execution should stop after the current command
 	 */
 	public static final byte FLAG_BREAK_PIPELINE = 1;
 	
-	protected static final Logger logger = JDALogger.getLog("Command Context");
+	/**
+	 * Indicate that the command pipeline execution should stop after a warning / error is emitted
+	 */
+	public static final byte FLAG_BREAK_PIPELINE_ON_WARN = 2;
+	
+	//#############
+	//INSTANCE VARS
+	//#############
 	
 	/**
 	 * Current command arguments
@@ -103,7 +115,11 @@ public abstract class CommandContext {
 	//FLAGS OPERATIONS
 	//################
 	
-	public boolean hasFlag(int flag) {
+	public void setFlag(byte flag) {
+		flags |= flag;
+	}
+	
+	public boolean hasFlag(byte flag) {
 		return ((flags & flag) > 0);
 	}
 	
@@ -112,10 +128,19 @@ public abstract class CommandContext {
 	//###################
 	
 	/**
+	 * Indicate that the command pipeline execution should stop after a warning / error is emitted
+	 */
+	@SuppressWarnings("unused")
+	public void breakPipelineOnWarn() {
+		setFlag(FLAG_BREAK_PIPELINE_ON_WARN);
+	}
+	
+	/**
 	 * Stop the command pipeline from executing further
 	 */
+	@SuppressWarnings("unused")
 	public void breakPipeline() {
-		flags |= FLAG_BREAK_PIPELINE;
+		setFlag(FLAG_BREAK_PIPELINE);
 	}
 	
 	/**
@@ -217,6 +242,19 @@ public abstract class CommandContext {
 	}
 	
 	/**
+	 * Write the given message to the pipeline or pass it to the {@link CommandContext#info(CharSequence)} method if the
+	 * current context don't have a pipeline
+	 * @param msg The message to pass
+	 */
+	public void wtpOrInfo(CharSequence msg) {
+		if(hasPipeline()) {
+			writeToPipe(msg);
+		} else {
+			info(msg);
+		}
+	}
+	
+	/**
 	 * Swap the command pipeline in and out buffers
 	 */
 	private void swapPipelineBuffers() {
@@ -227,6 +265,57 @@ public abstract class CommandContext {
 		
 		// empty out buffer
 		pipelineOutBuffer.setLength(0);
+	}
+	
+	/**
+	 * Return the number of arguments passed to the command
+	 * @param includePipe Whether or not to include the pipeline buffer in the result
+	 * @return The command arguments count
+	 */
+	@SuppressWarnings("unused")
+	public int argc(boolean includePipe) {
+		return (includePipe && hasPipeContents() ? cframe.crs.length + 1 : cframe.crs.length);
+	}
+	
+	/**
+	 * Return the contents of the pipeline buffer or the argument at the given index if the pipeline buffer is empty
+	 * @param index The argument index
+	 */
+	@SuppressWarnings("unused")
+	public String pipeOrArg(int index)  {
+		return (hasPipeContents() ? getPipeContents() : arg(index));
+	}
+	
+	/**
+	 * Merge the pipeline buffer contents and the argument list
+	 * @param before Whether to put the pipeline contents before or after the argument list
+	 * @return Whether the operation happened (if the pipeline buffer is not empty) or not
+	 */
+	@SuppressWarnings("unused")
+	public boolean mergePipeAndArgs(boolean before) {
+		if(hasPipeContents()) {
+			final int len = cframe.args.length;
+			final String[] tmp = new String[len + 1];
+			
+			if(cframe.crs != null) {
+				for (int i = 0; i < cframe.crs.length; i++) {
+					++cframe.crs[i];
+				}
+			}
+			
+			if(before) {
+				System.arraycopy(cframe.args, 0, tmp, 1, len);
+				tmp[0] = pipelineInBuffer.toString();
+			} else {
+				System.arraycopy(cframe.args, 0, tmp, 0, len);
+				tmp[len] = pipelineInBuffer.toString();
+			}
+			
+			cframe.args = tmp;
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	//####################
@@ -249,13 +338,18 @@ public abstract class CommandContext {
 			
 			// shift and optimize the carriage return index array
 			if(cframe.crs != null) {
-				TIntArrayList tarr = new TIntArrayList();
+				int toSkip = 0;
 				for (int t = 0; t < cframe.crs.length; t++) {
-					if((cframe.crs[t] - 1) > 0) {
-						tarr.add(cframe.crs[t] - 1);
+					if(--cframe.crs[t] <= 0) {
+						++toSkip;
 					}
 				}
-				cframe.crs = (tarr.isEmpty() ? null : tarr.toArray());
+				
+				if(toSkip >= cframe.crs.length) {
+					cframe.crs = null;
+				} else if(toSkip > 0) {
+					cframe.crs = Arrays.copyOfRange(cframe.crs, toSkip, cframe.crs.length);
+				}
 			}
 		} else {
 			cframe.args = new String[0];
@@ -512,10 +606,10 @@ public abstract class CommandContext {
 	
 	/**
 	 * Pack all the arguments in one string, add the specified string between each argument
-	 * @param between The string to add between two arguments
+	 * @param between The {@link CharSequence} to add between two arguments
 	 */
 	@SuppressWarnings("unused")
-	public String packArgs(String between) {
+	public String packArgs(CharSequence between) {
 		return packArgs(0, cframe.args.length, between);
 	}
 	
@@ -531,10 +625,10 @@ public abstract class CommandContext {
 	/**
 	 * Pack all the arguments in one string, add the specified string between each argument
 	 * @param start The first argument to pack
-	 * @param between The string to add between two arguments
+	 * @param between The {@link CharSequence} to add between two arguments
 	 */
 	@SuppressWarnings("unused")
-	public String packArgs(int start, String between) {
+	public String packArgs(int start, CharSequence between) {
 		return packArgs(start, cframe.args.length, between);
 	}
 	
@@ -559,10 +653,10 @@ public abstract class CommandContext {
 	 * Pack all the arguments in one string, add the specified string between each argument
 	 * @param start The first argument to pack
 	 * @param end The last argument to pack
-	 * @param between The string to add between two arguments
+	 * @param between The {@link CharSequence} to add between two arguments
 	 */
 	@SuppressWarnings("unused")
-	public String packArgs(int start, int end, String between) {
+	public String packArgs(int start, int end, CharSequence between) {
 		StringBuilder builder = new StringBuilder(32);
 		end = Math.min(cframe.args.length - 1, end);
 		
@@ -637,7 +731,7 @@ public abstract class CommandContext {
 	 * @param str The message to send
 	 */
 	@SuppressWarnings("unused")
-	public abstract void reply(String str);
+	public abstract void reply(CharSequence str);
 	
 	/**
 	 * Send a message in the context channel
@@ -651,7 +745,7 @@ public abstract class CommandContext {
 	 * @param message The message to send
 	 */
 	@SuppressWarnings("unused")
-	public void info(String message) {
+	public void info(CharSequence message) {
 		replyAsEmbed(message, ConfigHandler.color_info());
 	}
 	
@@ -660,7 +754,11 @@ public abstract class CommandContext {
 	 * @param message The message to send
 	 */
 	@SuppressWarnings("unused")
-	public void warn(String message) {
+	public void warn(CharSequence message) {
+		if(hasFlag(FLAG_BREAK_PIPELINE_ON_WARN)) {
+			setFlag(FLAG_BREAK_PIPELINE);
+		}
+		
 		replyAsEmbed(message, ConfigHandler.color_warn());
 	}
 	
@@ -669,7 +767,11 @@ public abstract class CommandContext {
 	 * @param message The message to send
 	 */
 	@SuppressWarnings("unused")
-	public void error(String message) {
+	public void error(CharSequence message) {
+		if(hasFlag(FLAG_BREAK_PIPELINE_ON_WARN)) {
+			setFlag(FLAG_BREAK_PIPELINE);
+		}
+		
 		replyAsEmbed(message, ConfigHandler.color_error());
 	}
 	
@@ -678,7 +780,7 @@ public abstract class CommandContext {
 	 * @param message The message to send
 	 */
 	@SuppressWarnings("unused")
-	public void replyAsEmbed(String message) {
+	public void replyAsEmbed(CharSequence message) {
 		replyAsEmbed(message, ConfigHandler.color_theme());
 	}
 	
@@ -687,7 +789,7 @@ public abstract class CommandContext {
 	 * @param message The message to send
 	 */
 	@SuppressWarnings("unused")
-	public abstract void replyAsEmbed(String message, Color color);
+	public abstract void replyAsEmbed(CharSequence message, Color color);
 	
 	/**
 	 * Send a message in the channel that the command was sent in.
@@ -718,7 +820,7 @@ public abstract class CommandContext {
 	 * @param name The file name
 	 */
 	@SuppressWarnings("unused")
-	public abstract void sendFile(File file, String name);
+	public abstract void sendFile(File file, CharSequence name);
 	
 	/**
 	 * Send a file to the channel
@@ -726,7 +828,7 @@ public abstract class CommandContext {
 	 * @param name The file name
 	 */
 	@SuppressWarnings("unused")
-	public abstract void sendFile(byte[] file, String name);
+	public abstract void sendFile(byte[] file, CharSequence name);
 	
 	/**
 	 * Send an image to the channel
@@ -741,7 +843,7 @@ public abstract class CommandContext {
 	 * @param name The image name
 	 */
 	@SuppressWarnings("unused")
-	public abstract void sendImage(RenderedImage img, String name);
+	public abstract void sendImage(RenderedImage img, CharSequence name);
 	
 	/**
 	 * Add {@link JdaUtils#EMOJI_ACCEPT} as a reaction to the command message

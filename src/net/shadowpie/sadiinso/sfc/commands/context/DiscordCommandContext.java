@@ -174,12 +174,12 @@ public class DiscordCommandContext extends CommandContext {
 	//#######################
 	
 	@Override
-	public void reply(String str) {
+	public void reply(CharSequence str) {
 		message.getChannel().sendMessage(str).queue();
 	}
 	
 	@Override
-	public void replyAsEmbed(String msg, Color color) {
+	public void replyAsEmbed(CharSequence msg, Color color) {
 		JdaUtils.sendAsEmbed(message.getChannel(), msg, color);
 	}
 	
@@ -199,13 +199,13 @@ public class DiscordCommandContext extends CommandContext {
 	}
 	
 	@Override
-	public void sendFile(File file, String msg) {
-		message.getChannel().sendFile(file, msg).queue();
+	public void sendFile(File file, CharSequence msg) {
+		message.getChannel().sendFile(file, msg.toString()).queue();
 	}
 	
 	@Override
-	public void sendFile(byte[] file, String msg) {
-		message.getChannel().sendFile(file, msg).queue();
+	public void sendFile(byte[] file, CharSequence msg) {
+		message.getChannel().sendFile(file, msg.toString()).queue();
 	}
 	
 	@Override
@@ -214,7 +214,7 @@ public class DiscordCommandContext extends CommandContext {
 	}
 
 	@Override
-	public void sendImage(RenderedImage img, String msg) {
+	public void sendImage(RenderedImage img, CharSequence msg) {
 		byte[] converted;
 		
 		try {
@@ -224,7 +224,7 @@ public class DiscordCommandContext extends CommandContext {
 			return;
 		}
 		
-		message.getChannel().sendFile(converted, msg).queue();
+		message.getChannel().sendFile(converted, msg.toString()).queue();
 	}
 
 	@Override

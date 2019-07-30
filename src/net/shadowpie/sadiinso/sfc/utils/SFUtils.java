@@ -433,4 +433,12 @@ public class SFUtils {
 		}
 	}
 	
+	public static String charSeqToString(CharSequence cs) {
+		if(cs == null) {
+			return null;
+		} else {
+			return String.valueOf(cs);
+		}
+	}
+	
 }

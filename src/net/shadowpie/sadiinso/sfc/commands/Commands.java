@@ -78,7 +78,7 @@ public final class Commands {
 		do {
 			status = executeInternal(ctx);
 			
-			if(status != COMMAND_SUCCESS || ctx.hasFlag(CommandContext.FLAG_BREAK_PIPELINE)) {
+			if((status != COMMAND_SUCCESS) || ctx.hasFlag(CommandContext.FLAG_BREAK_PIPELINE)) {
 				break;
 			}
 		} while (ctx.advancePipeline());
