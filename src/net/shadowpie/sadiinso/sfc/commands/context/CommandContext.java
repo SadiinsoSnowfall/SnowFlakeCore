@@ -278,12 +278,24 @@ public abstract class CommandContext {
 	}
 	
 	/**
-	 * Return the contents of the pipeline buffer or the argument at the given index if the pipeline buffer is empty
+	 * Return the contents of the pipeline buffer or the argument at the given index if the pipeline
+	 * buffer is empty
 	 * @param index The argument index
 	 */
 	@SuppressWarnings("unused")
 	public String pipeOrArg(int index)  {
 		return (hasPipeContents() ? getPipeContents() : arg(index));
+	}
+	
+	/**
+	 * Merge the pipeline buffer contents and the argument list (the pipeline content will be added at
+	 * the end of the argument list)
+	 * @return Whether the operation happened (if the pipeline buffer is not empty) or not
+	 * @see CommandContext#mergePipeAndArgs(boolean)
+	 */
+	@SuppressWarnings("unused")
+	public boolean mergePipeAndArgs() {
+		return mergePipeAndArgs(false);
 	}
 	
 	/**
