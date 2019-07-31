@@ -12,9 +12,8 @@ import org.slf4j.Logger;
 import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.LinkedList;
 
 public abstract class CommandContext {
 	
@@ -82,30 +81,13 @@ public abstract class CommandContext {
 	//CONSTRUCTORS
 	//############
 	
-	protected CommandContext(String content, boolean useMention) {
+	protected CommandContext(LinkedList<CommandContextFrame> frames, boolean useMention) {
 		this.useMention = useMention;
+		this.cframe = frames.pollFirst();
 		
-		List<CommandContextFrame> pipe = new ArrayList<>();
-		cframe = CommandContextUtils.extractArguments(CommandContextUtils.resolveMentions(content, useMention), pipe);
-		initPipeline(pipe);
-	}
-	
-	protected CommandContext(String content) {
-		this.useMention = false;
-		
-		List<CommandContextFrame> pipe = new ArrayList<>();
-		cframe = CommandContextUtils.extractArguments(content.toCharArray(), pipe);
-		initPipeline(pipe);
-	}
-	
-	/**
-	 * initialize the command pipeline if needed
-	 * @param pipe The command pipeline contents
-	 */
-	private void initPipeline(List<CommandContextFrame> pipe) {
-		if(!pipe.isEmpty()) {
-			pipeline = pipe.toArray(CommandContextFrame[]::new);
-			currentPipelineIndex = pipeline.length;
+		if(!frames.isEmpty()) {
+			pipeline = frames.toArray(CommandContextFrame[]::new);
+			currentPipelineIndex = 0;
 			pipelineOutBuffer = new SStringBuilder();
 			pipelineInBuffer = new SStringBuilder();
 		}

@@ -4,17 +4,21 @@ import net.dv8tion.jda.core.events.Event;
 import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
 import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
 import net.dv8tion.jda.core.hooks.ListenerAdapter;
+import net.dv8tion.jda.core.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.DiscordCommandContext;
 import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.listeners.eventwaiter.EventWaiter;
 import net.shadowpie.sadiinso.sfc.listeners.filter.AbstractFilter;
+import org.slf4j.Logger;
 
 import java.util.*;
 
 public class SFCListener extends ListenerAdapter {
 
+	private static final Logger logger = JDALogger.getLog("SFCListener");
+	
 	private final List<AbstractFilter> privateFilters = new ArrayList<>();
 	private final List<AbstractFilter> guildFilters = new ArrayList<>();
 
@@ -99,7 +103,12 @@ public class SFCListener extends ListenerAdapter {
 		if (ConfigHandler.enable_commands()) {
 
 			// build command context (null if the message is not a command)
-			CommandContext ctx = DiscordCommandContext.getContext(event.getMessage());
+			CommandContext ctx = null;
+			try {
+				 ctx = DiscordCommandContext.getContext(event.getMessage());
+			} catch(Exception e) {
+				logger.error("Error while building a CommandContext; user=" + event.getAuthor().getName() + " (" + event.getAuthor().getId() + "); msg=\"" + event.getMessage().getContentRaw() + "\"", e);
+			}
 
 			// execute the command
 			if (ctx != null) {
@@ -125,7 +134,12 @@ public class SFCListener extends ListenerAdapter {
 		// execute command
 		if (ConfigHandler.enable_commands()) {
 			// build command context (null if the message is not a command)
-			CommandContext ctx = DiscordCommandContext.getContext(event.getMessage());
+			CommandContext ctx = null;
+			try {
+				ctx = DiscordCommandContext.getContext(event.getMessage());
+			} catch(Exception e) {
+				logger.error("Error while building a CommandContext; user=" + event.getAuthor().getName() + " (" + event.getAuthor().getId() + "); msg=\"" + event.getMessage().getContentRaw() + "\"", e);
+			}
 
 			// execute the command
 			if (ctx != null) {

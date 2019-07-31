@@ -6,8 +6,7 @@ import java.util.stream.IntStream;
 public class SStringBuilder implements Appendable, CharSequence {
 
 	private char[] chars;
-	private int length = 0;
-	private int hashcode = 0;
+	private int length;
 	
 	//############
 	//CONSTRUCTORS
@@ -26,6 +25,7 @@ public class SStringBuilder implements Appendable, CharSequence {
 	 */
 	public SStringBuilder(int size) {
 		chars = new char[size];
+		length = 0;
 	}
 	
 	/**
@@ -49,9 +49,21 @@ public class SStringBuilder implements Appendable, CharSequence {
 	/**
 	 * Constructor with initial buffer value, set internal buffer size to chs.length + 16
 	 * @param chs chars to push
+	 * @see SStringBuilder#SStringBuilder(char[], boolean)
 	 */
 	public SStringBuilder(char[] chs) {
 		chars = Arrays.copyOf(chs, chs.length + 16);
+		length = chs.length;
+	}
+	
+	/**
+	 * Wrap the given char array with a SStringBuilder, all changes made to the array will be refleted in the 
+	 * SStringBuilder and vice versa
+	 * @param chs The char array to wrap
+	 * @param useRef This boolean serve no purpose except differentiating this constructor from {@link SStringBuilder#SStringBuilder(char[])}
+	 */
+	public SStringBuilder(char[] chs, @SuppressWarnings("unused") boolean useRef) {
+		chars = chs;
 		length = chs.length;
 	}
 	
@@ -349,6 +361,18 @@ public class SStringBuilder implements Appendable, CharSequence {
 	}
 	
 	/**
+	 * Return a copy of the used part of the internal buffer or a
+	 * reference to the internal buffer if trimmed
+	 */
+	public char[] copyOrRef() {
+		if(length == chars.length) {
+			return chars;
+		} else {
+			return Arrays.copyOfRange(chars, 0, length);
+		}
+	}
+	
+	/**
 	 * Return a copy of the used part of the internal buffer
 	 */
 	public char[] copy() {
@@ -373,10 +397,10 @@ public class SStringBuilder implements Appendable, CharSequence {
 	}
 	
 	/**
-	 * Return a view of the whole internal buffer, both used and not used
+	 * Return the internal buffer backed by this SStringBuilder
 	 */
-	public String bufferView() {
-		return Arrays.toString(chars);
+	public char[] getInternalBuffer() {
+		return chars;
 	}
 	
 	@Override
@@ -403,10 +427,9 @@ public class SStringBuilder implements Appendable, CharSequence {
 	
 	@Override
 	public int hashCode() {
-		if(hashcode == 0) {
-			for (int t = 0; t < length; t++) {
-				hashcode = hashcode * 31 + chars[t];
-			}
+		int hashcode = 0;
+		for (int t = 0; t < length; t++) {
+			hashcode = hashcode * 31 + chars[t];
 		}
 		
 		return hashcode;

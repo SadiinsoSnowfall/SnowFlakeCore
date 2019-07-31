@@ -9,17 +9,23 @@ import org.slf4j.Logger;
 import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.File;
+import java.util.LinkedList;
 
 public class ConsoleCommandContext extends CommandContext {
 
 	private static final Logger logger = JDALogger.getLog("Console_Commands");
 	
 	public static CommandContext getContext(String message) {
-		return new ConsoleCommandContext(message.trim());
+		LinkedList<CommandContextFrame> frames = CommandContextUtils.extractFrames(message.toCharArray());
+		if(frames == null) {
+			return null;
+		}
+		
+		return new ConsoleCommandContext(frames);
 	}
 	
-	private ConsoleCommandContext(String msg) {
-		super(msg);
+	private ConsoleCommandContext(LinkedList<CommandContextFrame> frames) {
+		super(frames, false);
 	}
 	
 	@Override

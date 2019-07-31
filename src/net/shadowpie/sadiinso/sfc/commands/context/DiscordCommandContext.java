@@ -5,10 +5,12 @@ import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 import net.shadowpie.sadiinso.sfc.utils.SFUtils;
+import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
 
 import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.File;
+import java.util.LinkedList;
 import java.util.List;
 
 public class DiscordCommandContext extends CommandContext {
@@ -18,20 +20,33 @@ public class DiscordCommandContext extends CommandContext {
 
 	public static CommandContext getContext(Message message) {
 		String content = message.getContentRaw();
-		if (content.length() < 2)
+		if (content.length() < 2) {
 			return null;
+		}
 		
 		boolean useTag = (content.startsWith(ConfigHandler.bot_tag()));
 		boolean useMention = (!useTag && ConfigHandler.use_mention() && content.startsWith(SFC.selfMention()));
 
-		if (!useTag && !useMention)
+		if (!useTag && !useMention) {
 			return null;
+		}
+		
+		SStringBuilder resolved = CommandContextUtils.resolveMentions(content, useMention);
+		if(resolved == null) {
+			return null;
+		}
+		
+		LinkedList<CommandContextFrame> frames = CommandContextUtils.extractFrames(resolved);
+		if(frames == null) {
+			System.out.println("frames == null");
+			return null;
+		}
 
-		return new DiscordCommandContext(message, useMention);
+		return new DiscordCommandContext(frames, message, useMention);
 	}
 	
-	private DiscordCommandContext(Message msg, boolean useMention) {
-		super(msg.getContentRaw(), useMention);
+	private DiscordCommandContext(LinkedList<CommandContextFrame> frames, Message msg, boolean useMention) {
+		super(frames, useMention);
 		this.message = msg;
 	}
 	
