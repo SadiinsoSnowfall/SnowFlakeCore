@@ -59,9 +59,7 @@ public class ButtonMenu extends AbstractMenu {
 
 	@Override
 	public void display(MessageChannel channel, MessageEmbed message, int subCount) {
-		channel.sendMessage(message).queue(m -> {
-			initialize(m, subCount);
-		});
+		channel.sendMessage(message).queue(m -> initialize(m, subCount));
 	}
 
 	@Override
@@ -83,15 +81,15 @@ public class ButtonMenu extends AbstractMenu {
 				m.addReaction(emote).queue();
 			} catch (Exception e) {
 				m.addReaction(optionsCache[i]).queue();
-				emote = null;
 			}
 		}
 		
 		EventWaiter.attach(GenericMessageReactionEvent.class).filter(event -> {
 			// If the message is not the same as the ButtonMenu
 			// currently being displayed.
-			if (!event.getMessageId().equals(m.getId()))
+			if (!event.getMessageId().equals(m.getId())) {
 				return false;
+			}
 
 			// If the reaction is an Emote we get the Snowflake,
 			// otherwise we get the unicode value.
@@ -125,14 +123,17 @@ public class ButtonMenu extends AbstractMenu {
 
 			// perform actions
 			OptionNode node = options.get(re);
-			if (node != null)
+			if (node != null) {
 				node.accept(event);
+			}
 
-			if (action != null)
+			if (action != null) {
 				action.accept(event);
+			}
 		}).timeout(timeout, l -> {
-			if (finalAction != null)
+			if (finalAction != null) {
 				finalAction.accept(l, m);
+			}
 		}).subscribe(subCount);
 	}
 
@@ -155,15 +156,18 @@ public class ButtonMenu extends AbstractMenu {
 
 		public void accept(GenericMessageReactionEvent event) {
 			if (event instanceof MessageReactionAddEvent) {
-				if (onAdd != null)
+				if (onAdd != null) {
 					onAdd.accept((MessageReactionAddEvent) event);
+				}
 			} else if (event instanceof MessageReactionRemoveEvent) {
-				if (onRemove != null)
+				if (onRemove != null) {
 					onRemove.accept((MessageReactionRemoveEvent) event);
+				}
 			}
 
-			if (genericAction != null)
+			if (genericAction != null) {
 				genericAction.accept(event);
+			}
 		}
 	}
 
@@ -258,8 +262,10 @@ public class ButtonMenu extends AbstractMenu {
 		 * @return This builder
 		 */
 		public Builder addChoice(String... emojis) {
-			for (String emoji : emojis)
+			for (String emoji : emojis) {
 				this.options.put(emoji, null);
+			}
+			
 			return this;
 		}
 
@@ -328,8 +334,10 @@ public class ButtonMenu extends AbstractMenu {
 		 * @return This builder
 		 */
 		public Builder addChoice(Emote... emotes) {
-			for (Emote emote : emotes)
+			for (Emote emote : emotes) {
 				this.options.put(emote.getId(), null);
+			}
+			
 			return this;
 		}
 

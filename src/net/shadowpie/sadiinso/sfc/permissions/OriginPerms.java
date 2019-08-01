@@ -10,10 +10,10 @@ public final class OriginPerms {
 	
 	private static final Logger logger = JDALogger.getLog("Command");
 	
-	public static final byte PERM_CONSOLE = 1 << 0;
-	public static final byte PERM_PRIVATE = 1 << 1;
-	public static final byte PERM_SERVER  = 1 << 2;
-	public static final byte PERM_OWNER_ONLY = 1 << 4;
+	public static final byte PERM_CONSOLE = 1;
+	public static final byte PERM_PRIVATE = 2;
+	public static final byte PERM_SERVER  = 4;
+	public static final byte PERM_OWNER_ONLY = 8;
 	public static final byte PERM_ALL = PERM_CONSOLE | PERM_PRIVATE | PERM_SERVER;
 	
 	public static byte compute(String config) {

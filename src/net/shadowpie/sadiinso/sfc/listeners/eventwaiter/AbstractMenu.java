@@ -21,6 +21,7 @@ import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -52,16 +53,22 @@ import java.util.concurrent.TimeUnit;
  *         without an embed.
  */
 public abstract class AbstractMenu {
-    protected Set<User> allowedUsers;
-    protected Set<Role> allowedRoles;
+    protected final Set<User> allowedUsers;
+    protected final Set<Role> allowedRoles;
     protected final long timeout;
     
     protected AbstractMenu(Set<User> allowedUsers, Set<Role> allowedRoles, long timeout) {
-    	if(!allowedUsers.isEmpty())
-    		this.allowedUsers = allowedUsers;
+    	if(allowedUsers.isEmpty()) {
+            this.allowedUsers = null;
+        } else {
+            this.allowedUsers = allowedUsers;
+        }
     	
-    	if(!allowedRoles.isEmpty())
-    		this.allowedRoles = allowedRoles;
+    	if(allowedRoles.isEmpty()) {
+    	    this.allowedRoles = null;
+        } else {
+            this.allowedRoles = allowedRoles;
+        }
     	
         this.timeout = timeout;
     }
@@ -188,17 +195,21 @@ public abstract class AbstractMenu {
      * @return {@code true} if the User is valid, {@code false} otherwise.
      */
     protected boolean isValidUser(User user, @Nullable Guild guild) {
-        if(user.isBot())
+        if(user.isBot()) {
             return false;
+        }
         
-        if((allowedUsers == null) && (allowedRoles == null))
-        	return true;
-        
-        if(allowedUsers.contains(user))
+        if((allowedUsers == null) && (allowedRoles == null)) {
             return true;
+        }
         
-        if((guild == null) || !guild.isMember(user))
+        if(allowedUsers.contains(user)) {
+            return true;
+        }
+        
+        if((guild == null) || !guild.isMember(user)) {
             return false;
+        }
 
         return guild.getMember(user).getRoles().stream().anyMatch(allowedRoles::contains);
     }
@@ -254,8 +265,8 @@ public abstract class AbstractMenu {
          * @return This builder
          */
         public final T addUsers(User... users) {
-            for(User user : users)
-            	allowedUsers.add(user);
+            allowedUsers.addAll(Arrays.asList(users));
+            
             return (T)this;
         }
 
@@ -284,8 +295,8 @@ public abstract class AbstractMenu {
          * @return This builder
          */
         public final T addRoles(Role... roles) {
-        	for(Role role : roles)
-        		allowedRoles.add(role);
+            allowedRoles.addAll(Arrays.asList(roles));
+        	
             return (T)this;
         }
 

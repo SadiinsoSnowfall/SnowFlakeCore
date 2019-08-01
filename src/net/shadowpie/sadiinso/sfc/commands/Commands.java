@@ -265,10 +265,13 @@ public final class Commands {
 	 * {@link Commands#addCommands(Class)}
 	 */
 	public static void init() {
-		for (Class<?> clazz : commandsToAdd)
-			addCommandsInternal(clazz);
-
-		commandsToAdd = null;
+		if(commandsToAdd != null) {
+			for (Class<?> clazz : commandsToAdd) {
+				addCommandsInternal(clazz);
+			}
+			
+			commandsToAdd = null;
+		}
 	}
 
 	private static void addCommandsInternal(Class<?> clazz) {

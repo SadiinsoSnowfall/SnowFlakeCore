@@ -1,31 +1,39 @@
 package net.shadowpie.sadiinso.sfc.listeners;
 
 import net.shadowpie.sadiinso.sfc.commands.Commands;
+import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ConsoleCommandContext;
+import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
 
 import java.util.Scanner;
 
 public final class ConsoleListener {
 
-	private ConsoleListener() {
-	}
+	private ConsoleListener() {}
 
 	private static Thread consoleTh;
+	private static int SLEEP_TIME;
 
 	public static void setup() {
-		if (consoleTh != null)
+		if (consoleTh != null) {
 			return;
+		}
 
+		SLEEP_TIME = ConfigHandler.sfConfig.getInt("console_listener_sleep_ms", 250);
+		
 		consoleTh = new Thread(() -> {
 			Scanner sc = new Scanner(System.in);
 
 			while (!Thread.interrupted()) {
 				if (sc.hasNextLine()) {
 					try {
-						switch (Commands.execute(ConsoleCommandContext.getContext(sc.nextLine()))) {
-							case Commands.COMMAND_NOT_FOUND:
-								System.err.println(Commands.err_cmd_not_found);
-								break;
+						CommandContext ctx = ConsoleCommandContext.getContext(sc.nextLine());
+						if(ctx != null) {
+							switch (Commands.execute(ctx)) {
+								case Commands.COMMAND_NOT_FOUND:
+									System.err.println(Commands.err_cmd_not_found);
+									break;
+							}
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -33,7 +41,7 @@ public final class ConsoleListener {
 				}
 
 				try {
-					Thread.sleep(500);
+					Thread.sleep(SLEEP_TIME);
 				} catch (InterruptedException ignored) { }
 			}
 
@@ -44,8 +52,9 @@ public final class ConsoleListener {
 	}
 
 	public static void shutdown() {
-		if (consoleTh != null)
+		if (consoleTh != null) {
 			consoleTh.interrupt();
+		}
 	}
 
 }

@@ -36,7 +36,7 @@ public class PermissionCommands {
 			return null;
 		}
 		
-		Object target = null;
+		Object target;
 		
 		long uid = ctx.getAsLong(0, -1);
 		if (uid == -1) { // check for name

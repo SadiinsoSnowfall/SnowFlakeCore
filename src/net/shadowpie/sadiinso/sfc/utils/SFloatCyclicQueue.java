@@ -192,7 +192,7 @@ public class SFloatCyclicQueue implements Iterable<Float> {
 	
 	public static class SFloatQueueIterator implements Iterator<Float> {
 		private int index;
-		private SFloatCyclicQueue queue;
+		private final SFloatCyclicQueue queue;
 		
 		public SFloatQueueIterator(SFloatCyclicQueue queue) {
 			this.queue = queue;

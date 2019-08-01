@@ -35,8 +35,7 @@ public class SFC {
 	private static final Logger logger = JDALogger.getLog("SFC");
 
 	private static final AtomicBoolean stopping = new AtomicBoolean(false);
-	
-	private static final List<Runnable> shutdownHooks = new LinkedList<>();
+	private static List<Runnable> shutdownHooks;
 	
 	private static JDA jda;
 	private static SFCListener listener;
@@ -138,10 +137,11 @@ public class SFC {
 		jda.addEventListener(listener);
 		selfMention = jda.getSelfUser().getAsMention();
 		
-		if(ConfigHandler.sfConfig.getBool("enable_console", true))
+		if(ConfigHandler.sfConfig.getBool("enable_console", true)) {
 			ConsoleListener.setup();
-		else
+		} else {
 			logger.info("Console input disabled");
+		}
 
 		//#############
 		//INIT COMMANDS
@@ -220,6 +220,10 @@ public class SFC {
 	 * @param hook The code to be executed
 	 */
 	public static void addShutdownHook(Runnable hook) {
+		if(shutdownHooks == null) {
+			shutdownHooks = new LinkedList<>();
+		}
+		
 		shutdownHooks.add(hook);
 	}
 	
@@ -227,28 +231,25 @@ public class SFC {
 	 * Stop the bot
 	 */
 	public static void shutdown() {
-		if(!stopping.compareAndSet(false, true))
+		if(!stopping.compareAndSet(false, true)) {
 			return;
+		}
 		
 		// stop the bot in a new thread to prevent race conditions
-		new Thread(new Runnable() {
-			@Override
-			public void run() {
-				if(!shutdownHooks.isEmpty()) {
-					logger.info("Executing shutdown hooks...");
-					for(Runnable hook : shutdownHooks)
-						hook.run();
+		new Thread(() -> {
+			if(shutdownHooks != null) {
+				logger.info("Executing shutdown hooks...");
+				for(Runnable hook : shutdownHooks) {
+					hook.run();
 				}
-				
-				logger.info("Shutting down SFC...");
-				WebAPI.shutdown();
-				DB.shutdown();
-				
-				ConsoleListener.shutdown();
-				jda.shutdownNow();
-				System.exit(0);
 			}
 			
+			logger.info("Shutting down SFC...");
+			WebAPI.shutdown();
+			DB.shutdown();
+			ConsoleListener.shutdown();
+			jda.shutdownNow();
+			System.exit(0);
 		}, "STOP").start();
 	}
 

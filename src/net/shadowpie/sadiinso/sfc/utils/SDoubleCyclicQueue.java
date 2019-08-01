@@ -213,7 +213,7 @@ public class SDoubleCyclicQueue implements Iterable<Double> {
 	
 	public static class SDoubleQueueIterator implements Iterator<Double> {
 		private int index;
-		private SDoubleCyclicQueue queue;
+		private final SDoubleCyclicQueue queue;
 		
 		public SDoubleQueueIterator(SDoubleCyclicQueue queue) {
 			this.queue = queue;

@@ -51,13 +51,15 @@ public class DBUtils {
 	//#######
 	
 	private static String join(long[] array, boolean enclose) {
-		if((array == null) || (array.length <= 0))
+		if((array == null) || (array.length <= 0)) {
 			return StringUtils.EMPTY;
+		}
 		
 		StringBuilder builder = new StringBuilder();
 		
-		if(enclose)
+		if(enclose) {
 			builder.append('(');
+		}
 		
 		for(int t = 0; t < array.length - 1; t++) {
 			builder.append(array[t]);
@@ -66,20 +68,23 @@ public class DBUtils {
 		
 		builder.append(array[array.length - 1]);
 		
-		if(enclose)
+		if(enclose) {
 			builder.append(')');
+		}
 		
 		return builder.toString();
 	}
 	
 	private static String join(int[] array, boolean enclose) {
-		if((array == null) || (array.length <= 0))
+		if((array == null) || (array.length <= 0)) {
 			return StringUtils.EMPTY;
+		}
 		
 		StringBuilder builder = new StringBuilder();
 		
-		if(enclose)
+		if(enclose) {
 			builder.append('(');
+		}
 		
 		for(int t = 0; t < array.length - 1; t++) {
 			builder.append(array[t]);
@@ -88,8 +93,9 @@ public class DBUtils {
 		
 		builder.append(array[array.length - 1]);
 		
-		if(enclose)
+		if(enclose) {
 			builder.append(')');
+		}
 		
 		return builder.toString();
 	}
@@ -100,8 +106,9 @@ public class DBUtils {
 		
 		StringBuilder builder = new StringBuilder();
 		
-		if(enclose)
+		if(enclose) {
 			builder.append('(');
+		}
 		
 		for(int t = 0; t < array.length - 1; t++) {
 			builder.append(array[t]);
@@ -110,8 +117,10 @@ public class DBUtils {
 		
 		builder.append(array[array.length - 1]);
 		
-		if(enclose)
+		if(enclose) {
 			builder.append(')');
+		}
+		
 		return builder.toString();
 	}
 	

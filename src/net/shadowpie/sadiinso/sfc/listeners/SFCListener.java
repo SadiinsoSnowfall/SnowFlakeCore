@@ -49,7 +49,7 @@ public class SFCListener extends ListenerAdapter {
 	 * @param handler The handler to add
 	 */
 	public <T extends Event> void addEventHandler(Class<T> clazz, CustomEventHandler<T> handler) {
-		List<CustomEventHandler<?>> handlers = customHandlers.computeIfAbsent(clazz, e -> new LinkedList<CustomEventHandler<?>>());
+		List<CustomEventHandler<?>> handlers = customHandlers.computeIfAbsent(clazz, e -> new LinkedList<>());
 		handlers.add(handler);
 	}
 
@@ -70,6 +70,7 @@ public class SFCListener extends ListenerAdapter {
 	}
 	
 	@Override
+	@SuppressWarnings("unchecked")
 	public void onGenericEvent(Event event) {
 		// notify event waiter
 		EventWaiter.onEvent(event);

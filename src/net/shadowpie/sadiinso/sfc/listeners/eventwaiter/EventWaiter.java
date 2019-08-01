@@ -21,7 +21,7 @@ public class EventWaiter {
 	private static final Map<Class<? extends Event>, List<EWNode>> nodeMap = new ConcurrentHashMap<>();
 	
 	public static <T extends Event> EWNodeBuilder<T> attach(Class<T> clazz) {
-		return new EWNodeBuilder<T>(clazz);
+		return new EWNodeBuilder<>(clazz);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -40,7 +40,7 @@ public class EventWaiter {
 	
 	public static class EWNodeBuilder<T extends Event> {
 		private final Class<? extends Event> clazz;
-		private List<Predicate<T>> conditions;
+		private final List<Predicate<T>> conditions;
 		private Consumer<T> action;
 		private LongConsumer expireAction;
 		private long timeout;
@@ -86,7 +86,7 @@ public class EventWaiter {
 			if(action == null)
 				throw new RuntimeException("onEvent action cannot be null");
 			
-			Predicate<T>[] filters = (conditions.isEmpty() ? null : conditions.toArray(new Predicate[conditions.size()]));
+			Predicate<T>[] filters = (conditions.isEmpty() ? null : conditions.toArray(Predicate[]::new));
 			EWNode cnode = new EWNode(filters, action, expireAction, runCount, timeout);
 			nodes.add(cnode);
 			
@@ -96,7 +96,7 @@ public class EventWaiter {
 	
 	@SuppressWarnings("rawtypes")
 	private static List<EWNode> createList() {
-		return Collections.synchronizedList(new ArrayList<EWNode>());
+		return Collections.synchronizedList(new ArrayList<>());
 	}
 	
 	public static class EWNode<T extends Event> {
@@ -112,10 +112,11 @@ public class EventWaiter {
 			this.expireAction = expireAction;
 			this.remainCall = runCount;
 			
-			if(timeout == -1)
+			if(timeout == -1) {
 				this.expire = timeout;
-			else
+			} else {
 				this.expire = System.currentTimeMillis() + timeout;
+			}
 		}
 		
 		private boolean expired(long currentTime) {
@@ -128,10 +129,13 @@ public class EventWaiter {
 		}
 		
 		private boolean attempt(T event) {
-			if(conditions != null)
-				for(Predicate<T> condition : conditions)
-					if(!condition.test(event))
+			if(conditions != null) {
+				for (Predicate<T> condition : conditions) {
+					if (!condition.test(event)) {
 						return false;
+					}
+				}
+			}
 			
 			action.accept(event);
 			

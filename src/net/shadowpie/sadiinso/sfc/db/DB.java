@@ -29,17 +29,19 @@ public class DB {
 		cfg.setField("user", "");
 		cfg.setField("pass", "");
 		
-		if(cfg.needRewrite())
+		if(cfg.needRewrite()) {
 			return SFC.STOP_CONFIG_REWRITE;
+		}
 		
 		// if DB connection is disabled
-		if(!cfg.getBool("enabled"))
+		if(!cfg.getBool("enabled")) {
 			return SFC.ALL_OK;
+		}
 		
 		logger.info("Connecting to the database...");
 		
-		String driverClass = null;
-		String driverBase = null;
+		String driverClass;
+		String driverBase;
 		
 		switch(cfg.getString("flavour").toLowerCase()) {
 			case "mysql":
@@ -85,24 +87,24 @@ public class DB {
 	 * Shutdown the DB connection
 	 */
 	public static void shutdown() {
-		if(!init)
-			return;
-		
-		init = false;
-		ds.close();
+		if(init) {
+			init = false;
+			ds.close();
+		}
 	}
 	
 	/**
 	 * Return a new database connection, don't forget to call close() on it once you are done
 	 */
 	public static Connection getConn() {
-		if(!init)
-			return null;
-		
-		try {
-			return ds.getConnection();
-		} catch (SQLException e) {
-			logger.error("Error while retrieving a mysql connection", e);
+		if(init) {
+			try {
+				return ds.getConnection();
+			} catch (SQLException e) {
+				logger.error("Error while retrieving a mysql connection", e);
+				return null;
+			}
+		} else {
 			return null;
 		}
 	}

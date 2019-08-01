@@ -16,7 +16,7 @@ import java.util.List;
 
 public final class HelpCommand {
 
-	public static String STR_CMD_NOT_FOUND = "Commande inconnue : %s";
+	public static final String STR_CMD_NOT_FOUND = "Commande inconnue : %s";
 
 	@SFCommand(name = "ownerhelp", allowFrom = "all/ownerOnly", usage = "[command]", description = "Affiche la liste des commandes")
 	public static void onOwnerHelp(CommandContext ctx) {
@@ -69,7 +69,7 @@ public final class HelpCommand {
 				ctx.reply(embed);
 				
 			} else { // single command
-				EmbedBuilder embed = null;
+				EmbedBuilder embed;
 				String alias = "";
 				
 				if(handler.alias != null)

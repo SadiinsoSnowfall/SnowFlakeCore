@@ -8,18 +8,10 @@ import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.DecimalFormat;
 import java.util.List;
 import java.util.*;
 
 public class SFUtils {
-	
-	private static final DecimalFormat df = new DecimalFormat();
-	
-	static {
-		df.setGroupingSize(3);
-		df.setMaximumFractionDigits(2);
-	}
 	
 	// Suppresses default constructor, ensuring non-instantiability.
 	private SFUtils() {
@@ -31,18 +23,6 @@ public class SFUtils {
 	public static final char ZERO_WIDTH_SPACE = '​';
 	
 	/**
-	 * Format a number to be more human readable
-	 * <br>
-	 * Example : <strong>123456.789</strong> will became <strong>123 456.78</strong>
-	 *
-	 * @param number The number to format
-	 * @return A string representing the formatted number
-	 */
-	public static String formatNumber(Number number) {
-		return df.format(number);
-	}
-	
-	/**
 	 * Split a string at the last occurence of the given separator
 	 *
 	 * @param src       The source string
@@ -51,10 +31,11 @@ public class SFUtils {
 	 */
 	public static String[] splitLastIndexOf(String src, String separator, boolean omitSeparator) {
 		int i = src.lastIndexOf(separator);
-		if (i == -1)
-			return new String[]{src};
-		else
-			return new String[]{src.substring(0, i), omitSeparator ? (i == (src.length() - 1) ? "" : src.substring(i + 1)) : src.substring(i)};
+		if (i == -1) {
+			return new String[] { src };
+		} else {
+			return new String[] { src.substring(0, i), omitSeparator ? (i == (src.length() - 1) ? "" : src.substring(i + 1)) : src.substring(i) };
+		}
 	}
 	
 	/**
@@ -95,26 +76,32 @@ public class SFUtils {
 			return -1;
 		
 		// set upper bound
-		if (to > array.length)
+		if (to > array.length) {
 			to = array.length;
+		}
 		
 		// set lower bound
-		if (from < 0)
+		if (from < 0) {
 			from = 0;
+		}
 		
 		if (value.length == 1) { // if len = 1 do simple indexof
-			for (; from < to; from++)
-				if (array[from] == value[0])
+			for (; from < to; from++) {
+				if (array[from] == value[0]) {
 					return from;
+				}
+			}
 		} else {
 			int tmp;
 			int len = value.length - 1;
 			search:
 			for (; from < to - len; from++) {
 				if ((array[from] == value[0]) && (array[from + len] == value[len])) { // check first and last chars first
-					for (tmp = 1; tmp < len; tmp++) // check intermediate chars
-						if (array[from + tmp] != value[tmp])
+					for (tmp = 1; tmp < len; tmp++) {// check intermediate chars
+						if (array[from + tmp] != value[tmp]) {
 							continue search;
+						}
+					}
 					
 					return from;
 				}
@@ -239,14 +226,18 @@ public class SFUtils {
 		
 		// multiples columns
 		int lastCol = strs.length % maxColSize;
-		if (lastCol == 0)
+		if (lastCol == 0) {
 			lastCol = maxColSize;
+		}
 		
 		// init padding
 		int maxPad = 0;
-		for (int t = 0; t < strs.length; t++)
-			if (strs[t].length() > maxPad)
+		for (int t = 0; t < strs.length; t++) {
+			if (strs[t].length() > maxPad) {
 				maxPad = strs[t].length();
+			}
+		}
+		
 		char[] pad = new char[(maxPad + spacing) * 2];
 		for (int t = 0; t < pad.length; t += 2) {
 			pad[t] = ' ';
@@ -255,17 +246,21 @@ public class SFUtils {
 		
 		// init lines builders
 		StringBuilder[] lines = new StringBuilder[maxColSize];
-		for (int t = 0; t < lines.length; t++)
+		for (int t = 0; t < lines.length; t++) {
 			lines[t] = new StringBuilder(maxPad * (strs.length / maxColSize));
+		}
 		
 		// compute lines
 		for (int t = 0; t < strs.length - lastCol; t += maxColSize) {
 			int padding = 0;
 			int end = t + maxColSize;
 			
-			for (int u = t; u < end; u++)
-				if (strs[u].length() > padding)
+			for (int u = t; u < end; u++) {
+				if (strs[u].length() > padding) {
 					padding = strs[u].length();
+				}
+			}
+			
 			padding += spacing;
 			
 			int index, curPad;
@@ -275,14 +270,16 @@ public class SFUtils {
 				
 				lines[index].append(strs[u]);
 				
-				if (curPad > 0)
+				if (curPad > 0) {
 					lines[index].append(pad, 0, curPad * 2);
+				}
 			}
 		}
 		
 		// add last column
-		for (int t = strs.length - lastCol; t < strs.length; t++)
+		for (int t = strs.length - lastCol; t < strs.length; t++) {
 			lines[t % maxColSize].append(strs[t]);
+		}
 		
 		// build final string
 		StringBuilder sb = new StringBuilder(64);
@@ -342,6 +339,7 @@ public class SFUtils {
 	 * @param buf A String buffer to prevent high alloc count
 	 * @param dejaVu A Set of object already scanned to prevent reference loop
 	 */
+	@SuppressWarnings("unchecked")
 	private static void deepToString(Object o, StringBuilder buf, Set<Object> dejaVu) {
 		if (o == null) {
 			buf.append("null");

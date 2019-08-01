@@ -22,12 +22,14 @@ public class WebAPI {
 
 	public static void init() {
 		Config cfg = ConfigHandler.queryConfig("socket_server");
-		if (!cfg.exists())
+		if (!cfg.exists()) {
 			return;
+		}
 
 		boolean enabled = cfg.getBool("enable", true);
-		if(!enabled)
+		if(!enabled) {
 			return;
+		}
 		
 		logger = JDALogger.getLog("WebAPI");
 		
@@ -35,6 +37,8 @@ public class WebAPI {
 		String ip = cfg.getString("address", "localhost");
 		int port = cfg.getInt("port", -1);
 
+		WebEndpoints.init();
+		
 		logger.info("address=" + ip + " port=" + port);
 
 		try {
@@ -44,9 +48,10 @@ public class WebAPI {
 			return;
 		}
 
-		serverThread = new Thread(new Runnable() {
-			@Override
-			public void run() {
+		if(WebEndpoints.size() == 0) {
+			logger.error("No endpoints registered, cancelling socket server starting...");
+		} else {
+			serverThread = new Thread(() -> {
 				while (!Thread.interrupted()) {
 					try {
 						Socket client = server.accept();
@@ -55,24 +60,25 @@ public class WebAPI {
 						logger.error("Socket error", e);
 					}
 				}
-
+				
 				try {
 					server.close();
 				} catch (IOException e) {
 					logger.error("Error while closing the socketServer", e);
 				}
-			}
-		}, "socket_server");
-
-		serverThread.setDaemon(true);
-		serverThread.start();
-		init = true;
-		logger.info("Loaded " + WebEndpoints.size() + " WebEndpoints !");
+			}, "socket_server");
+			
+			serverThread.setDaemon(true);
+			serverThread.start();
+			init = true;
+			logger.info("Loaded " + WebEndpoints.size() + " WebEndpoints !");
+		}
 	}
 
 	public static void shutdown() {
-		if (!init)
+		if (!init) {
 			return;
+		}
 
 		serverThread.interrupt();
 	}
@@ -90,8 +96,9 @@ public class WebAPI {
 
 		@Override
 		public void run() {
-			if (socket.isClosed())
+			if (socket.isClosed()) {
 				return;
+			}
 
 			BufferedReader r = null;
 			PrintWriter w = null;
@@ -100,7 +107,7 @@ public class WebAPI {
 				r = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 				w = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"));
 				String str = r.readLine();
-				String answer = null;
+				String answer;
 
 				if (str != null) {
 					try {

@@ -3,6 +3,7 @@ package net.shadowpie.sadiinso.sfc.webapi;
 import org.json.JSONObject;
 
 import java.lang.invoke.LambdaMetafactory;
+import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
@@ -18,9 +19,8 @@ public class WebEndpointHandler {
 	}
 	
 	public static WebEventCaller createHandler(Method m) throws Throwable {
-		var lookup = MethodHandles.lookup();
-		var mh = lookup.unreflect(m);
-		var command = (WebEventCaller) LambdaMetafactory.metafactory(lookup, "execute", MethodType.methodType(WebEventCaller.class), mh.type(), mh, mh.type()).getTarget().invokeExact();
-		return command;
+		MethodHandles.Lookup lookup = MethodHandles.lookup();
+		MethodHandle mh = lookup.unreflect(m);
+		return (WebEventCaller) LambdaMetafactory.metafactory(lookup, "execute", MethodType.methodType(WebEventCaller.class), mh.type(), mh, mh.type()).getTarget().invokeExact();
 	}
 }

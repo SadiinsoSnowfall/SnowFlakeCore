@@ -282,7 +282,7 @@ public class JdaUtils {
 	 * @return A String array containing the roles ids
 	 */
 	public static String[] getAllRoleId(Member member) {
-		return (member != null ? member.getRoles().stream().map(r -> r.getId()).toArray(String[]::new) : null);
+		return (member != null ? member.getRoles().stream().map(Role::getId).toArray(String[]::new) : null);
 	}
 	
 	/**
@@ -291,7 +291,7 @@ public class JdaUtils {
 	 * @return A long array containing the roles ids
 	 */
 	public static long[] getAllRoleIdLong(Member member) {
-		return (member != null ? member.getRoles().stream().mapToLong(r -> r.getIdLong()).toArray() : null);
+		return (member != null ? member.getRoles().stream().mapToLong(Role::getIdLong).toArray() : null);
 	}
 	
 }

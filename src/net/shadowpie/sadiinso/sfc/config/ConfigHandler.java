@@ -111,8 +111,9 @@ public class ConfigHandler {
 		sfConfig.setField("color_error", "#e50000");
 		
 		// check if config is valid
-		if(sfConfig.needrw)
+		if(sfConfig.needrw) {
 			return false;
+		}
 		
 		// set global entries
 		bot_token 		= sfConfig.getString("bot_token");
@@ -128,7 +129,6 @@ public class ConfigHandler {
 		color_error 	= Color.decode(sfConfig.getString("color_error"));
 		
 		assert(!bot_token.isEmpty());
-		
 		return true;
 	}
 	
@@ -191,7 +191,7 @@ public class ConfigHandler {
 				root.put(label, json);
 			}
 			
-			Object var = null;
+			Object var;
 			
 			try {
 				var = json.get(name);
