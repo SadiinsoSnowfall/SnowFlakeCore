@@ -38,10 +38,9 @@ public class DiscordCommandContext extends CommandContext {
 		
 		LinkedList<CommandContextFrame> frames = CommandContextUtils.extractFrames(resolved);
 		if(frames == null) {
-			System.out.println("frames == null");
 			return null;
 		}
-
+		
 		return new DiscordCommandContext(frames, message, useMention);
 	}
 	

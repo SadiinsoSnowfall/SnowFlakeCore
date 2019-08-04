@@ -145,8 +145,7 @@ public class CommandContextUtils {
 					case '\"':
 						inStr = !inStr;
 						break;
-					
-					case '>': // DOS/NT and Unix syntax for piping
+						
 					case '|':
 						if(!inStr) { // execute and break only if not in string block, else run the default case
 							pindex = t + 1;

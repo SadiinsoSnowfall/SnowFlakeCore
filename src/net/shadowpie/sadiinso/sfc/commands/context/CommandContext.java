@@ -143,8 +143,8 @@ public abstract class CommandContext {
 			return false;
 		}
 		
-		cframe = pipeline[--currentPipelineIndex];
-		if(currentPipelineIndex <= 0) {
+		cframe = pipeline[currentPipelineIndex++];
+		if(currentPipelineIndex >= pipeline.length) {
 			pipeline = null;
 		}
 		
