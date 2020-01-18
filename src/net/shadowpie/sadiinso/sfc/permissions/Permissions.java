@@ -1,9 +1,9 @@
 package net.shadowpie.sadiinso.sfc.permissions;
 
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Role;
-import net.dv8tion.jda.core.utils.JDALogger;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.internal.utils.JDALogger;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.db.DB;
 import net.shadowpie.sadiinso.sfc.db.DBUtils;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
@@ -113,7 +113,7 @@ public class Permissions {
 		}
 
 		// owner already have all the perms
-		if (ConfigHandler.owner_lid() == userid) {
+		if (SFConfig.owner_lid() == userid) {
 			return 1;
 		}
 
@@ -209,7 +209,7 @@ public class Permissions {
 		}
 
 		// bot owner have all the perms
-		if (ConfigHandler.owner_lid() == userid) {
+		if (SFConfig.owner_lid() == userid) {
 			return 0;
 		}
 
@@ -319,7 +319,7 @@ public class Permissions {
 	 */
 	public static boolean hasPerm(long serverid, long userid, String perm) {
 		// bot owner have all the perms
-		if (ConfigHandler.owner_lid() == userid)
+		if (SFConfig.owner_lid() == userid)
 			return true;
 
 		// guild owners have all the perms on their servers
@@ -390,7 +390,7 @@ public class Permissions {
 	 */
 	public static int revokeAll(long serverid, long userid) {
 		// bot owner have all the perms
-		if (ConfigHandler.owner_lid() == userid)
+		if (SFConfig.owner_lid() == userid)
 			return 0;
 
 		// guild owners have all the perms on their servers

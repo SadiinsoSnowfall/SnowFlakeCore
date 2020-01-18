@@ -1,16 +1,16 @@
 package net.shadowpie.sadiinso.sfc.sfc;
 
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.User;
-import net.dv8tion.jda.core.exceptions.AccountTypeException;
-import net.dv8tion.jda.core.utils.JDALogger;
+import net.dv8tion.jda.api.AccountType;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.User;
+import net.dv8tion.jda.api.exceptions.AccountTypeException;
+import net.dv8tion.jda.internal.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.base.BaseCommands;
 import net.shadowpie.sadiinso.sfc.commands.base.HelpCommand;
 import net.shadowpie.sadiinso.sfc.commands.base.PermissionCommands;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.db.DB;
 import net.shadowpie.sadiinso.sfc.listeners.ConsoleListener;
 import net.shadowpie.sadiinso.sfc.listeners.SFCListener;
@@ -62,7 +62,7 @@ public class SFC {
 		//###########
 		logger.info("Loading configuration file...");
 		try {
-			if(!ConfigHandler.init(configFile))
+			if(!SFConfig.init(configFile))
 				logger.warn("Writing configuration file, the bot need to be restarted");
 		} catch(Exception e) {
 			logger.warn("The \"SnowFlakeCore\" entry of the configuration file seems imcomplete or corrupted", e);
@@ -85,8 +85,8 @@ public class SFC {
 		//#####################
 		//CHECK CONFIG PRE INIT
 		//#####################
-		if(ConfigHandler.needRewrite()) {
-			ConfigHandler.rewrite();
+		if(SFConfig.needRewrite()) {
+			SFConfig.rewrite();
 			System.exit(STOP_CONFIG_REWRITE);
 		}	
 		
@@ -108,12 +108,12 @@ public class SFC {
 		//########
 		logger.info("Initialing JDA library...");
 		try {
-			jda = new JDABuilder(AccountType.BOT).setToken(ConfigHandler.bot_token()).build();
+			jda = new JDABuilder(AccountType.BOT).setToken(SFConfig.bot_token()).build();
 			jda.awaitReady();
 		} catch (AccountTypeException e) {
 			logger.warn("The given token is a client token, trying to launch as a selfbot...");
 			try {
-				jda = new JDABuilder(AccountType.CLIENT).setToken(ConfigHandler.bot_token()).build();
+				jda = new JDABuilder(AccountType.CLIENT).setToken(SFConfig.bot_token()).build();
 				jda.awaitReady();
 			} catch (LoginException e1) {
 				logger.error("The bot token is invalid");
@@ -137,7 +137,7 @@ public class SFC {
 		jda.addEventListener(listener);
 		selfMention = jda.getSelfUser().getAsMention();
 		
-		if(ConfigHandler.sfConfig.getBool("enable_console", true)) {
+		if(SFConfig.sfConfig.getBool("enable_console", true)) {
 			ConsoleListener.setup();
 		} else {
 			logger.info("Console input disabled");
@@ -146,7 +146,7 @@ public class SFC {
 		//#############
 		//INIT COMMANDS
 		//#############
-		if (ConfigHandler.enable_commands()) {
+		if (SFConfig.enable_commands()) {
 			logger.info("Initialing commands...");
 			Commands.addCommands(BaseCommands.class);
 			Commands.addCommands(HelpCommand.class);
@@ -163,8 +163,8 @@ public class SFC {
 		//######################
 		//CHECK CONFIG POST INIT
 		//######################
-		if(ConfigHandler.needRewrite()) {
-			ConfigHandler.rewrite();
+		if(SFConfig.needRewrite()) {
+			SFConfig.rewrite();
 			System.exit(STOP_CONFIG_REWRITE);
 		}
 		

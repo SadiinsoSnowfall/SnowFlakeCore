@@ -1,7 +1,7 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
 import gnu.trove.list.array.TIntArrayList;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
 
@@ -33,7 +33,7 @@ public class CommandContextUtils {
 		int index = 0;
 		
 		// remove caller
-		index += (useMention ? SFC.selfMention().length() : ConfigHandler.bot_tag().length());
+		index += (useMention ? SFC.selfMention().length() : SFConfig.bot_tag().length());
 		
 		// remove post-caller whitespaces (including ZWS)
 		while ((index < msg.length) && (Character.isWhitespace(msg[index]) || (msg[index] == '\u200B'))) {

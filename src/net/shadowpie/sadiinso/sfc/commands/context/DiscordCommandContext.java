@@ -1,7 +1,7 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import net.dv8tion.jda.core.entities.*;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.dv8tion.jda.api.entities.*;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 import net.shadowpie.sadiinso.sfc.utils.SFUtils;
@@ -24,8 +24,8 @@ public class DiscordCommandContext extends CommandContext {
 			return null;
 		}
 		
-		boolean useTag = (content.startsWith(ConfigHandler.bot_tag()));
-		boolean useMention = (!useTag && ConfigHandler.use_mention() && content.startsWith(SFC.selfMention()));
+		boolean useTag = (content.startsWith(SFConfig.bot_tag()));
+		boolean useMention = (!useTag && SFConfig.use_mention() && content.startsWith(SFC.selfMention()));
 
 		if (!useTag && !useMention) {
 			return null;
@@ -56,7 +56,7 @@ public class DiscordCommandContext extends CommandContext {
 	
 	@Override
 	public Guild getGuild() {
-		return message.getGuild();
+		return (message.isFromType(ChannelType.TEXT) ? message.getGuild() : null);
 	}
 	
 	@Override
@@ -101,8 +101,9 @@ public class DiscordCommandContext extends CommandContext {
 	@Override
 	public Member getAsMember(int index) {
 		Guild guild = this.getGuild();
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		try {
 			Member member = guild.getMemberById(getAsLong(index));
@@ -118,8 +119,9 @@ public class DiscordCommandContext extends CommandContext {
 	@Override
 	public Role getAsRole(int index) {
 		Guild guild = this.getGuild();
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		try {
 			Role role = guild.getRoleById(getAsLong(index));
@@ -135,8 +137,9 @@ public class DiscordCommandContext extends CommandContext {
 	@Override
 	public TextChannel getAsTextChannel(int index) {
 		Guild guild = this.getGuild();
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		try {
 			TextChannel channel = guild.getTextChannelById(getAsLong(index));
@@ -152,8 +155,9 @@ public class DiscordCommandContext extends CommandContext {
 	@Override
 	public VoiceChannel getAsVoiceChannel(int index) {
 		Guild guild = this.getGuild();
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		try {
 			VoiceChannel channel = guild.getVoiceChannelById(getAsLong(index));
@@ -169,8 +173,9 @@ public class DiscordCommandContext extends CommandContext {
 	@Override
 	public Category getAsCategory(int index) {
 		Guild guild = this.getGuild();
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		try {
 			Category category = guild.getCategoryById(getAsLong(index));

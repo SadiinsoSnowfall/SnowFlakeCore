@@ -1,6 +1,7 @@
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
-import net.dv8tion.jda.core.events.Event;
+
+import net.dv8tion.jda.api.events.GenericEvent;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,14 +19,14 @@ import java.util.function.Predicate;
 public class EventWaiter {
 	
 	@SuppressWarnings("rawtypes")
-	private static final Map<Class<? extends Event>, List<EWNode>> nodeMap = new ConcurrentHashMap<>();
+	private static final Map<Class<? extends GenericEvent>, List<EWNode>> nodeMap = new ConcurrentHashMap<>();
 	
-	public static <T extends Event> EWNodeBuilder<T> attach(Class<T> clazz) {
+	public static <T extends GenericEvent> EWNodeBuilder<T> attach(Class<T> clazz) {
 		return new EWNodeBuilder<>(clazz);
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public static void onEvent(Event event) {
+	public static void onEvent(GenericEvent event) {
 		long curTime = System.currentTimeMillis();
 		Class<?> clazz = event.getClass();
 		
@@ -38,14 +39,14 @@ public class EventWaiter {
 		}
 	}
 	
-	public static class EWNodeBuilder<T extends Event> {
-		private final Class<? extends Event> clazz;
+	public static class EWNodeBuilder<T extends GenericEvent> {
+		private final Class<? extends GenericEvent> clazz;
 		private final List<Predicate<T>> conditions;
 		private Consumer<T> action;
 		private LongConsumer expireAction;
 		private long timeout;
 		
-		private EWNodeBuilder(Class<? extends Event> clazz) {
+		private EWNodeBuilder(Class<? extends GenericEvent> clazz) {
 			this.clazz = clazz;
 			conditions = new LinkedList<>();
 			this.timeout = -1;
@@ -99,7 +100,7 @@ public class EventWaiter {
 		return Collections.synchronizedList(new ArrayList<>());
 	}
 	
-	public static class EWNode<T extends Event> {
+	public static class EWNode<T extends GenericEvent> {
 		private final Predicate<T>[] conditions;
 		private final Consumer<T> action;
 		private final LongConsumer expireAction;
@@ -130,10 +131,15 @@ public class EventWaiter {
 		
 		private boolean attempt(T event) {
 			if(conditions != null) {
-				for (Predicate<T> condition : conditions) {
-					if (!condition.test(event)) {
-						return false;
+				try {
+					for (Predicate<T> condition : conditions) {
+						if (!condition.test(event)) {
+							return false;
+						}
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
 				}
 			}
 			

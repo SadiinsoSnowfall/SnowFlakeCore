@@ -1,12 +1,13 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.utils.JDALogger;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.internal.utils.JDALogger;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 import net.shadowpie.sadiinso.sfc.utils.SFUtils;
 import net.shadowpie.sadiinso.sfc.utils.SStringBuilder;
+import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 
 import java.awt.*;
@@ -22,7 +23,7 @@ public abstract class CommandContext {
 	/**
 	 * Index for retrieving values from the command pipeline read buffer
 	 */
-	public static final int PIPELINE = -42;
+	private static final int PIPELINE = -42;
 	
 	//#####
 	//FLAGS
@@ -346,7 +347,7 @@ public abstract class CommandContext {
 				}
 			}
 		} else {
-			cframe.args = new String[0];
+			cframe.args = ArrayUtils.EMPTY_STRING_ARRAY;
 		}
 		
 		return this;
@@ -740,7 +741,7 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public void info(CharSequence message) {
-		replyAsEmbed(message, ConfigHandler.color_info());
+		replyAsEmbed(message, SFConfig.color_info());
 	}
 	
 	/**
@@ -753,7 +754,7 @@ public abstract class CommandContext {
 			setFlag(FLAG_BREAK_PIPELINE);
 		}
 		
-		replyAsEmbed(message, ConfigHandler.color_warn());
+		replyAsEmbed(message, SFConfig.color_warn());
 	}
 	
 	/**
@@ -766,7 +767,7 @@ public abstract class CommandContext {
 			setFlag(FLAG_BREAK_PIPELINE);
 		}
 		
-		replyAsEmbed(message, ConfigHandler.color_error());
+		replyAsEmbed(message, SFConfig.color_error());
 	}
 	
 	/**
@@ -775,7 +776,7 @@ public abstract class CommandContext {
 	 */
 	@SuppressWarnings("unused")
 	public void replyAsEmbed(CharSequence message) {
-		replyAsEmbed(message, ConfigHandler.color_theme());
+		replyAsEmbed(message, SFConfig.color_theme());
 	}
 	
 	/**

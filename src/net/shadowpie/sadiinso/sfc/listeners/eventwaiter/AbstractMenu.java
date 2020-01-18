@@ -15,8 +15,8 @@
  */
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
-import net.dv8tion.jda.core.entities.*;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.dv8tion.jda.api.entities.*;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 
 import javax.annotation.Nullable;
@@ -30,12 +30,12 @@ import java.util.concurrent.TimeUnit;
  * A frame for wrapping a menu that waits on forms of user input such as reactions,
  * or key-phrases.
  *
- * <p>Classes extending this are able to take a provided {@link net.dv8tion.jda.core.entities.Message Message}
- * or {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel} and display a visualized "Menu"
+ * <p>Classes extending this are able to take a provided {@link net.dv8tion.jda.api.entities.Message Message}
+ * or {@link net.dv8tion.jda.api.entities.MessageChannel MessageChannel} and display a visualized "Menu"
  * as or in it.
  *
  * <p>The JDA-Utilities default implementations of this superclass typically handle input through
- * the assistance of things such as {@link net.dv8tion.jda.core.entities.MessageReaction reactions},
+ * the assistance of things such as {@link net.dv8tion.jda.api.entities.MessageReaction reactions},
  * but the actual implementation is only limited to the events provided by Discord and handled through JDA.
  *
  * <p>For custom implementations, readability of creating and integrating may be improved
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @implNote
  *         While the standard JDA-Utilities implementations of this and Menu are
- *         all handled as {@link net.dv8tion.jda.core.entities.MessageEmbed embeds},
+ *         all handled as {@link net.dv8tion.jda.api.entities.MessageEmbed embeds},
  *         there is no bias or advantage of implementing a custom Menu as a message
  *         without an embed.
  */
@@ -91,7 +91,7 @@ public abstract class AbstractMenu {
      * @param description The description of the message to send
      */
     public void display(MessageChannel channel, String title, String description) {
-    	display(channel, title, description, ConfigHandler.color_theme());
+    	display(channel, title, description, SFConfig.color_theme());
     }
     
     /**
@@ -118,7 +118,7 @@ public abstract class AbstractMenu {
     }
     
     /**
-     * Displays this Menu in a {@link net.dv8tion.jda.core.entities.MessageChannel MessageChannel}.
+     * Displays this Menu in a {@link net.dv8tion.jda.api.entities.MessageChannel MessageChannel}.
      * 
      * @param channel The MessageChannel to display this Menu in
      * @param message The Message to send
@@ -127,7 +127,7 @@ public abstract class AbstractMenu {
     public abstract void display(MessageChannel channel, MessageEmbed message, int subCount);
     
     /**
-     * Attach the menu to the given {@link net.dv8tion.jda.core.entities.Message Message}.
+     * Attach the menu to the given {@link net.dv8tion.jda.api.entities.Message Message}.
      * 
      * @param message The Message to display this Menu as
      */
@@ -136,7 +136,7 @@ public abstract class AbstractMenu {
     }
     
     /**
-     * Attach the menu to the given {@link net.dv8tion.jda.core.entities.Message Message}.
+     * Attach the menu to the given {@link net.dv8tion.jda.api.entities.Message Message}.
      * 
      * @param message The Message to display this Menu as
      * @param subCount The maximum number of event to receive before closing the menu
@@ -144,7 +144,7 @@ public abstract class AbstractMenu {
     public abstract void attach(Message message, int subCount);
 
     /**
-     * Checks to see if the provided {@link net.dv8tion.jda.core.entities.User User}
+     * Checks to see if the provided {@link net.dv8tion.jda.api.entities.User User}
      * is valid to interact with this Menu.<p>
      *
      * This is a shortcut for {@link #isValidUser(User, Guild)} where the Guild
@@ -162,7 +162,7 @@ public abstract class AbstractMenu {
 
     /**
      *
-     * Checks to see if the provided {@link net.dv8tion.jda.core.entities.User User}
+     * Checks to see if the provided {@link net.dv8tion.jda.api.entities.User User}
      * is valid to interact with this Menu.<p>
      *
      * For a User to be considered "valid" to use a Menu, the following logic (in order) is applied:
@@ -203,7 +203,7 @@ public abstract class AbstractMenu {
             return true;
         }
         
-        if(allowedUsers.contains(user)) {
+        if((allowedUsers != null) && allowedUsers.contains(user)) {
             return true;
         }
         
@@ -237,13 +237,13 @@ public abstract class AbstractMenu {
      * @implNote
      *         Before 2.0 this were a separate class known as {@code MenuBuilder}.<br>
      *         Note that while the standard JDA-Utilities implementations of this and Menu are
-     *         all handled as {@link net.dv8tion.jda.core.entities.MessageEmbed embeds}, there
+     *         all handled as {@link net.dv8tion.jda.api.entities.MessageEmbed embeds}, there
      *         is no bias or advantage of implementing a custom Menu as a message without an embed.
      */
     @SuppressWarnings("unchecked")
     public abstract static class Builder<T extends Builder<T, V>, V extends AbstractMenu> {
-        protected Set<User> allowedUsers = new HashSet<>();
-        protected Set<Role> allowedRoles = new HashSet<>();
+        protected final Set<User> allowedUsers = new HashSet<>();
+        protected final Set<Role> allowedRoles = new HashSet<>();
         protected long timeout = 300_000; // aka 5 minutes
 
         /**
@@ -256,7 +256,7 @@ public abstract class AbstractMenu {
         public abstract V build();
 
         /**
-         * Adds {@link net.dv8tion.jda.core.entities.User User}s that are allowed to use the
+         * Adds {@link net.dv8tion.jda.api.entities.User User}s that are allowed to use the
          * {@link net.shadowpie.sadiinso.sfc.listeners.eventwaiter.AbstractMenu AbstractMenu} that will be built.
          *
          * @param  users
@@ -271,7 +271,7 @@ public abstract class AbstractMenu {
         }
 
         /**
-         * Sets {@link net.dv8tion.jda.core.entities.User User}s that are allowed to use the
+         * Sets {@link net.dv8tion.jda.api.entities.User User}s that are allowed to use the
          * {@link net.shadowpie.sadiinso.sfc.listeners.eventwaiter.AbstractMenu AbstractMenu} that will be built.
          * <br>This clears any Users already registered before adding the ones specified.
          *
@@ -286,7 +286,7 @@ public abstract class AbstractMenu {
         }
 
         /**
-         * Adds {@link net.dv8tion.jda.core.entities.Role Role}s that are allowed to use the
+         * Adds {@link net.dv8tion.jda.api.entities.Role Role}s that are allowed to use the
          * {@link net.shadowpie.sadiinso.sfc.listeners.eventwaiter.AbstractMenu AbstractMenu} that will be built.
          *
          * @param  roles
@@ -301,7 +301,7 @@ public abstract class AbstractMenu {
         }
 
         /**
-         * Sets {@link net.dv8tion.jda.core.entities.Role Role}s that are allowed to use the
+         * Sets {@link net.dv8tion.jda.api.entities.Role Role}s that are allowed to use the
          * {@link net.shadowpie.sadiinso.sfc.listeners.eventwaiter.AbstractMenu AbstractMenu} that will be built.
          * <br>This clears any Roles already registered before adding the ones specified.
          *

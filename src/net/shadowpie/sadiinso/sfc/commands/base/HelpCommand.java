@@ -1,6 +1,6 @@
 package net.shadowpie.sadiinso.sfc.commands.base;
 
-import net.dv8tion.jda.core.EmbedBuilder;
+import net.dv8tion.jda.api.EmbedBuilder;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
@@ -16,30 +16,29 @@ import java.util.List;
 
 public final class HelpCommand {
 
-	public static final String STR_CMD_NOT_FOUND = "Commande inconnue : %s";
-
-	@SFCommand(name = "ownerhelp", allowFrom = "all/ownerOnly", usage = "[command]", description = "Affiche la liste des commandes")
-	public static void onOwnerHelp(CommandContext ctx) {
-		showHelp(ctx, true);
-	}
+	public static final String STR_CMD_NOT_FOUND = "Commande inconnue : ";
 	
-	@SFCommand(name="help", usage = "[command]", description = "Affiche la liste des commandes")
+	@SFCommand(
+			name="help",
+			usage = "[command]",
+			description = "Affiche la liste des commandes"
+	)
 	public static void onHelp(CommandContext ctx) {
-		showHelp(ctx, false);
+		showHelp(ctx, JdaUtils.isBotOwner(ctx.getAuthor()));
 	}
 	
 	public static void showHelp(CommandContext ctx, boolean owner) {
 		if(ctx.argc() > 0) {
-			String path = ctx.packArgs(".");
+			String path = ctx.packArgs(".").toLowerCase();
 			AbstractCommandHandler handler = Commands.findCommand(path);
 			
 			if(handler == null) {
-				ctx.warn(STR_CMD_NOT_FOUND.replaceAll("%s", path));
+				ctx.warn(STR_CMD_NOT_FOUND + path);
 				return;
 			}
 			
-			if (OriginPerms.has(handler.basePerms, OriginPerms.PERM_OWNER_ONLY) && !owner) { // skip owner_only commands if needed
-				ctx.warn(STR_CMD_NOT_FOUND.replaceAll("%s", path));
+			if (OriginPerms.has(handler.originPerms, OriginPerms.OWNER_ONLY) && !owner) { // skip owner_only commands if needed
+				ctx.warn(STR_CMD_NOT_FOUND + path);
 				return;
 			}
 			
@@ -48,23 +47,28 @@ public final class HelpCommand {
 				List<String> groups = new LinkedList<>();
 				
 				for(AbstractCommandHandler sub : ((GroupedCommandHandler) handler).subCommands.values()) {
-					if (OriginPerms.has(handler.basePerms, OriginPerms.PERM_OWNER_ONLY) && !owner) // skip owner_only commands if needed
-						continue;
-					
-					if (sub instanceof GroupedCommandHandler)
-						groups.add(sub.name);
-					else
-						commands.add(sub.name);
+					if (!OriginPerms.has(handler.originPerms, OriginPerms.OWNER_ONLY) || owner) { // skip owner_only commands if needed
+						if (sub instanceof GroupedCommandHandler) {
+							groups.add(sub.name);
+						} else {
+							commands.add(sub.name);
+						}
+					}
 				}
 				
 				EmbedBuilder embed = JdaUtils.getEmbedBuilder();
 				embed.addField("Groupe \"" + path + "\"", SFUtils.monospace(handler.description), false);
 				
-				Collections.sort(commands);
-				if(commands.size() > 0)embed.addField("Commandes :", SFUtils.monospace(SFUtils.snapFormat(commands, 7, 2)), true);
 				
-				Collections.sort(groups);
-				if(groups.size() > 0)embed.addField("Groupes :", SFUtils.monospace(SFUtils.snapFormat(groups, 7, 2)), true);
+				if(commands.size() > 0) {
+					Collections.sort(commands);
+					embed.addField("Commandes :", SFUtils.monospace(SFUtils.snapFormat(commands, 8, 2)), true);
+				}
+				
+				if(groups.size() > 0) {
+					Collections.sort(groups);
+					embed.addField("Groupes :", SFUtils.monospace(SFUtils.snapFormat(groups, 8, 2)), true);
+				}
 				
 				ctx.reply(embed);
 				
@@ -77,7 +81,7 @@ public final class HelpCommand {
 				
 				if(handler.computedUsage != null) {
 					embed = JdaUtils.getEmbedBuilder("Commande \"" + path + "\"" + alias);
-					embed.addField(SFUtils.monospace(handler.computedUsage), handler.description, false);
+					embed.addField(handler.description, SFUtils.monospace(handler.computedUsage), false);
 				} else {
 					embed = JdaUtils.getEmbedBuilder();
 					embed.addField("Commande \"" + path + "\"" + alias, handler.description, false);
@@ -94,20 +98,24 @@ public final class HelpCommand {
 		List<String> groups = new LinkedList<>();
 
 		for (AbstractCommandHandler handler : Commands.getMap().values()) {
-			if (OriginPerms.has(handler.basePerms, OriginPerms.PERM_OWNER_ONLY) && !owner) // skip owner_only commands if needed
-				continue;
-
-			if (handler instanceof GroupedCommandHandler)
-				groups.add(handler.name);
-			else
-				commands.add(handler.name);
+			if (!OriginPerms.has(handler.originPerms, OriginPerms.OWNER_ONLY) || owner) { // skip owner_only commands if needed
+				if (handler instanceof GroupedCommandHandler) {
+					groups.add(handler.name);
+				} else {
+					commands.add(handler.name);
+				}
+			}
 		}
 		
-		Collections.sort(commands);
-		if(commands.size() > 0) embed.addField("Commandes :", SFUtils.monospace(SFUtils.snapFormat(commands, 7, 2)), true);
+		if(commands.size() > 0) {
+			Collections.sort(commands);
+			embed.addField("Commandes :", SFUtils.monospace(SFUtils.snapFormat(commands, 8, 2)), true);
+		}
 		
-		Collections.sort(groups);
-		if(groups.size() > 0) embed.addField("Groupes :", SFUtils.monospace(SFUtils.snapFormat(groups, 7, 2)), true);
+		if(groups.size() > 0) {
+			Collections.sort(groups);
+			embed.addField("Groupes :", SFUtils.monospace(SFUtils.snapFormat(groups, 8, 2)), true);
+		}
 		
 		ctx.reply(embed);
 	}

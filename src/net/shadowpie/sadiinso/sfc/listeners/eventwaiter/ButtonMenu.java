@@ -15,11 +15,11 @@
  */
 package net.shadowpie.sadiinso.sfc.listeners.eventwaiter;
 
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.events.message.react.GenericMessageReactionEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionAddEvent;
-import net.dv8tion.jda.core.events.message.react.MessageReactionRemoveEvent;
-import net.dv8tion.jda.core.utils.Checks;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.message.react.GenericMessageReactionEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
+import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
+import net.dv8tion.jda.internal.utils.Checks;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 
 import java.util.LinkedHashMap;
@@ -85,6 +85,10 @@ public class ButtonMenu extends AbstractMenu {
 		}
 		
 		EventWaiter.attach(GenericMessageReactionEvent.class).filter(event -> {
+			if (event.getUser() == null) {
+				return false;
+			}
+			
 			// If the message is not the same as the ButtonMenu
 			// currently being displayed.
 			if (!event.getMessageId().equals(m.getId())) {
@@ -104,14 +108,16 @@ public class ButtonMenu extends AbstractMenu {
 			}
 
 			// ignore self reactions add
-			if(event.getUser().equals(SFC.getJDA().getSelfUser())) {
+			if(SFC.getJDA().getSelfUser().equals(event.getUser())) {
 				return false;
 			}
 			
-			// check if the user is valid
-			if (!isValidUser(event.getUser(), event.getGuild())) {
-				event.getReaction().removeReaction().queue();
-				return false;
+			// check if the user is valid (only if not in private channel)
+			if (event.isFromGuild()) {
+				if (!isValidUser(event.getUser(), event.getGuild())) {
+					event.getReaction().removeReaction().queue();
+					return false;
+				}
 			}
 
 			return true;
@@ -254,7 +260,7 @@ public class ButtonMenu extends AbstractMenu {
 		 * Adds String unicode emojis as button choices.
 		 *
 		 * <p>
-		 * Any non-unicode {@link net.dv8tion.jda.core.entities.Emote Emote}s should be
+		 * Any non-unicode {@link net.dv8tion.jda.api.entities.Emote Emote}s should be
 		 * added using {@link ButtonMenu.Builder#addChoice(Emote...)
 		 * ButtonMenu.Builder#addChoice(Emote...)}.
 		 *
@@ -273,7 +279,7 @@ public class ButtonMenu extends AbstractMenu {
 		 * Adds String unicode emojis as button choices.
 		 *
 		 * <p>
-		 * Any non-unicode {@link net.dv8tion.jda.core.entities.Emote Emote}s should be
+		 * Any non-unicode {@link net.dv8tion.jda.api.entities.Emote Emote}s should be
 		 * added using {@link ButtonMenu.Builder#addChoice(Emote...)
 		 * ButtonMenu.Builder#addChoice(Emote...)}.
 		 *
@@ -289,7 +295,7 @@ public class ButtonMenu extends AbstractMenu {
 		 * Adds String unicode emojis as button choices.
 		 *
 		 * <p>
-		 * Any non-unicode {@link net.dv8tion.jda.core.entities.Emote Emote}s should be
+		 * Any non-unicode {@link net.dv8tion.jda.api.entities.Emote Emote}s should be
 		 * added using {@link ButtonMenu.Builder#addChoice(Emote...)
 		 * ButtonMenu.Builder#addChoice(Emote...)}.
 		 *
@@ -306,7 +312,7 @@ public class ButtonMenu extends AbstractMenu {
 		 * Adds String unicode emojis as button choices.
 		 *
 		 * <p>
-		 * Any non-unicode {@link net.dv8tion.jda.core.entities.Emote Emote}s should be
+		 * Any non-unicode {@link net.dv8tion.jda.api.entities.Emote Emote}s should be
 		 * added using {@link ButtonMenu.Builder#addChoice(Emote...)
 		 * ButtonMenu.Builder#addChoice(Emote...)}.
 		 *
@@ -322,7 +328,7 @@ public class ButtonMenu extends AbstractMenu {
 		}
 
 		/**
-		 * Adds custom {@link net.dv8tion.jda.core.entities.Emote Emote}s as button
+		 * Adds custom {@link net.dv8tion.jda.api.entities.Emote Emote}s as button
 		 * choices.
 		 *
 		 * <p>
@@ -342,7 +348,7 @@ public class ButtonMenu extends AbstractMenu {
 		}
 
 		/**
-		 * Adds custom {@link net.dv8tion.jda.core.entities.Emote Emote}s as button choices.
+		 * Adds custom {@link net.dv8tion.jda.api.entities.Emote Emote}s as button choices.
 		 * <p>
 		 * Any regular unicode emojis should be added using
 		 * {@link ButtonMenu.Builder#addChoice(String...)
@@ -357,7 +363,7 @@ public class ButtonMenu extends AbstractMenu {
 		}
 
 		/**
-		 * Adds custom {@link net.dv8tion.jda.core.entities.Emote Emote}s as button choices.
+		 * Adds custom {@link net.dv8tion.jda.api.entities.Emote Emote}s as button choices.
 		 * <p>
 		 * Any regular unicode emojis should be added using
 		 * {@link ButtonMenu.Builder#addChoice(String...)
@@ -373,7 +379,7 @@ public class ButtonMenu extends AbstractMenu {
 		}
 		
 		/**
-		 * Adds custom {@link net.dv8tion.jda.core.entities.Emote Emote}s as button choices.
+		 * Adds custom {@link net.dv8tion.jda.api.entities.Emote Emote}s as button choices.
 		 * <p>
 		 * Any regular unicode emojis should be added using
 		 * {@link ButtonMenu.Builder#addChoice(String...)
@@ -392,7 +398,7 @@ public class ButtonMenu extends AbstractMenu {
 		/**
 		 * Adds Emojis or Emotes as button choices.
 		 * <p>
-		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.core.entities.Emote Emote}
+		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.api.entities.Emote Emote}
 		 *
 		 * @param objs The Emote / emojis to add
 		 * @return This builder
@@ -414,7 +420,7 @@ public class ButtonMenu extends AbstractMenu {
 		/**
 		 * Adds Emojis or Emotes as button choices.
 		 * <p>
-		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.core.entities.Emote Emote}
+		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.api.entities.Emote Emote}
 		 *
 		 * @param obj  The Emote / emoji to add
 		 * @param action The code to run when this button is clicked
@@ -427,7 +433,7 @@ public class ButtonMenu extends AbstractMenu {
 		/**
 		 * Adds Emojis or Emotes as button choices.
 		 * <p>
-		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.core.entities.Emote Emote}
+		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.api.entities.Emote Emote}
 		 *
 		 * @param obj      The Emote / emoji to add
 		 * @param onAdd    The code to run when this button is selected
@@ -441,7 +447,7 @@ public class ButtonMenu extends AbstractMenu {
 		/**
 		 * Adds Emojis or Emotes as button choices.
 		 * <p>
-		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.core.entities.Emote Emote}
+		 * This function only accept Objects that are instances of String or {@link net.dv8tion.jda.api.entities.Emote Emote}
 		 *
 		 * @param obj      		The Emote / emoji to add
 		 * @param onAdd    		The code to run when this button is selected

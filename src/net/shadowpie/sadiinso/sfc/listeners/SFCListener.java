@@ -1,18 +1,20 @@
 package net.shadowpie.sadiinso.sfc.listeners;
 
-import net.dv8tion.jda.core.events.Event;
-import net.dv8tion.jda.core.events.message.guild.GuildMessageReceivedEvent;
-import net.dv8tion.jda.core.events.message.priv.PrivateMessageReceivedEvent;
-import net.dv8tion.jda.core.hooks.ListenerAdapter;
-import net.dv8tion.jda.core.utils.JDALogger;
+import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.api.events.GenericEvent;
+import net.dv8tion.jda.api.events.message.guild.GuildMessageReceivedEvent;
+import net.dv8tion.jda.api.events.message.priv.PrivateMessageReceivedEvent;
+import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.internal.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.DiscordCommandContext;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.listeners.eventwaiter.EventWaiter;
 import net.shadowpie.sadiinso.sfc.listeners.filter.AbstractFilter;
 import org.slf4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.*;
 
 public class SFCListener extends ListenerAdapter {
@@ -22,7 +24,7 @@ public class SFCListener extends ListenerAdapter {
 	private final List<AbstractFilter> privateFilters = new ArrayList<>();
 	private final List<AbstractFilter> guildFilters = new ArrayList<>();
 
-	private final Map<Class<? extends Event>, List<CustomEventHandler<? extends Event>>> customHandlers = new HashMap<>();
+	private final Map<Class<? extends GenericEvent>, List<CustomEventHandler<? extends GenericEvent>>> customHandlers = new HashMap<>();
 
 	/**
 	 * Add a filter to received private messages
@@ -48,7 +50,7 @@ public class SFCListener extends ListenerAdapter {
 	 * @param clazz   The event type
 	 * @param handler The handler to add
 	 */
-	public <T extends Event> void addEventHandler(Class<T> clazz, CustomEventHandler<T> handler) {
+	public <T extends GenericEvent> void addEventHandler(Class<T> clazz, CustomEventHandler<T> handler) {
 		List<CustomEventHandler<?>> handlers = customHandlers.computeIfAbsent(clazz, e -> new LinkedList<>());
 		handlers.add(handler);
 	}
@@ -57,7 +59,7 @@ public class SFCListener extends ListenerAdapter {
 	 * Custom getter with auto cast
 	 */
 	@SuppressWarnings("unchecked")
-	private <T extends Event> List<CustomEventHandler<T>> getHandlers(Class<T> clazz) {
+	private <T extends GenericEvent> List<CustomEventHandler<T>> getHandlers(Class<T> clazz) {
 		List<CustomEventHandler<T>> res = (List<CustomEventHandler<T>>) (Object) customHandlers.get(clazz);
 		return (res == null ? Collections.EMPTY_LIST : res);
 	}
@@ -71,20 +73,23 @@ public class SFCListener extends ListenerAdapter {
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public void onGenericEvent(Event event) {
+	public void onGenericEvent(@Nonnull GenericEvent event) {
 		// notify event waiter
 		EventWaiter.onEvent(event);
 		
 		// execute generic handlers
-		for (CustomEventHandler<Event> handler : getHandlers(Event.class)) {
+		for (CustomEventHandler<GenericEvent> handler : getHandlers(GenericEvent.class)) {
 			handler.handle(event);
 		}
 		
-		// handle custom events
-		if(event.getClass() != Event.class) {
-			for (CustomEventHandler handler : getHandlers(event.getClass())) {
+		// execute specific handlers
+		Class<? extends GenericEvent> clazz = event.getClass();
+		while(clazz != Event.class) {
+			for (CustomEventHandler handler : getHandlers(clazz)) {
 				handler.handle(event);
 			}
+			
+			clazz = (Class<? extends Event>) clazz.getSuperclass();
 		}
 	}
 
@@ -101,7 +106,7 @@ public class SFCListener extends ListenerAdapter {
 			}
 		}
 		
-		if (ConfigHandler.enable_commands()) {
+		if (SFConfig.enable_commands()) {
 
 			// build command context (null if the message is not a command)
 			CommandContext ctx = null;
@@ -133,7 +138,7 @@ public class SFCListener extends ListenerAdapter {
 		}
 
 		// execute command
-		if (ConfigHandler.enable_commands()) {
+		if (SFConfig.enable_commands()) {
 			// build command context (null if the message is not a command)
 			CommandContext ctx = null;
 			try {

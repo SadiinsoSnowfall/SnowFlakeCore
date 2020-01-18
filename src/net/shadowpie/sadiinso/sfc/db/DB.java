@@ -2,9 +2,9 @@ package net.shadowpie.sadiinso.sfc.db;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import net.dv8tion.jda.core.utils.JDALogger;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
+import net.dv8tion.jda.internal.utils.JDALogger;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
+import net.shadowpie.sadiinso.sfc.config.SFConfig.Config;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import org.slf4j.Logger;
 
@@ -19,7 +19,7 @@ public class DB {
 	private static HikariDataSource ds;
 	
 	public static int init() {
-		Config cfg = ConfigHandler.queryConfig("database");
+		Config cfg = SFConfig.queryConfig("database");
 		
 		// mysql
 		cfg.setField("enabled", true);

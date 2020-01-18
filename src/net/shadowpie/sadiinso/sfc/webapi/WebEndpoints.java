@@ -1,8 +1,10 @@
 package net.shadowpie.sadiinso.sfc.webapi;
 
-import net.dv8tion.jda.core.utils.JDALogger;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import net.dv8tion.jda.internal.utils.JDALogger;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
 import net.shadowpie.sadiinso.sfc.webapi.WebEndpointHandler.WebEventCaller;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.lang.reflect.Method;
@@ -34,13 +36,13 @@ public class WebEndpoints {
 		logger = JDALogger.getLog("WebEndpoints");
 	}
 	
-	public static String execute(String cmd, JSONObject data) {
+	public static String execute(String cmd, JsonNode data) {
 		WebEventCaller handler = handlers.get(cmd);
 		if (handler == null) {
 			return error_not_found;
 		}
-
-		JSONObject answer;
+		
+		JsonNode answer;
 
 		try {
 			answer = handler.execute(data);
@@ -76,20 +78,20 @@ public class WebEndpoints {
 	}
 
 	private static boolean isHandler(Method m) {
-		if (!m.isAnnotationPresent(ASFWebEndpoint.class) || !Modifier.isStatic(m.getModifiers()) || !m.getReturnType().isAssignableFrom(JSONObject.class)) {
+		if (!m.isAnnotationPresent(ASFWebEndpoint.class) || !Modifier.isStatic(m.getModifiers()) || !m.getReturnType().isAssignableFrom(ObjectNode.class)) {
 			return false;
 		}
 
 		Class<?>[] params = m.getParameterTypes();
-		return (params.length == 1) && params[0].isAssignableFrom(JSONObject.class);
+		return (params.length == 1) && params[0].isAssignableFrom(ObjectNode.class);
 	}
 
 	/**
 	 * Return a JSONObject that contain a unique field "res" with the given message
 	 * @param msg The message
 	 */
-	public static JSONObject simpleReply(String msg) {
-		JSONObject reply = new JSONObject();
+	public static ObjectNode simpleReply(String msg) {
+		ObjectNode reply = SFUtils.mapper.createObjectNode();
 		reply.put("res", msg);
 		return reply;
 	}

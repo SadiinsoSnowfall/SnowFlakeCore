@@ -1,6 +1,6 @@
 package net.shadowpie.sadiinso.sfc.commands;
 
-import net.dv8tion.jda.core.utils.JDALogger;
+import net.dv8tion.jda.internal.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
@@ -9,8 +9,8 @@ import net.shadowpie.sadiinso.sfc.commands.handlers.ASFCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.AbstractCommandHandler;
 import net.shadowpie.sadiinso.sfc.commands.handlers.GroupedCommandHandler;
 import net.shadowpie.sadiinso.sfc.config.ASFConfig;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler.Config;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
+import net.shadowpie.sadiinso.sfc.config.SFConfig.Config;
 import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.permissions.Permissions;
 import net.shadowpie.sadiinso.sfc.utils.SFUtils;
@@ -19,6 +19,7 @@ import org.slf4j.Logger;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public final class Commands {
 
@@ -32,7 +33,8 @@ public final class Commands {
 	public static final String err_no_server = "This command cannot be executed on a server";
 	public static final String err_no_console = "This command cannot be executed on the console";
 	public static final String err_no_perm = "You need to have permission \"%perm\" to execute this command";
-
+	private static final Pattern PERM_SPLIT = Pattern.compile(",\\s*");
+	
 	// Suppresses default constructor, ensuring non-instantiability.
 	private Commands() {}
 
@@ -104,26 +106,29 @@ public final class Commands {
 		}
 
 		ContextOrigin origin = ctx.getOrigin();
-		byte perms = handler.basePerms;
+		byte perms = handler.originPerms;
 
+		long uid = ctx.getAuthorIdLong();
+		long ownerid = SFConfig.owner_lid();
+		
 		// check base permissions
-		if (OriginPerms.has(perms, OriginPerms.PERM_OWNER_ONLY) && (ctx.getAuthorIdLong() != ConfigHandler.owner_lid()) && (origin != ContextOrigin.CONSOLE)) {
+		if (OriginPerms.has(perms, OriginPerms.OWNER_ONLY) && (uid != ownerid) && (origin != ContextOrigin.CONSOLE)) {
 			return COMMAND_NOT_FOUND;
 		}
 
 		// verify origin permissions
 		if (origin == ContextOrigin.CONSOLE) { // emulated context (console)
-			if (!OriginPerms.has(perms, OriginPerms.PERM_CONSOLE)) {
+			if (!OriginPerms.has(perms, OriginPerms.CONSOLE)) {
 				ctx.warn(err_no_console);
 				return COMMAND_PERM_ERROR;
 			}
 		} else if (origin == ContextOrigin.PRIVATE) { // pm context
-			if (!OriginPerms.has(perms, OriginPerms.PERM_PRIVATE)) {
+			if (!OriginPerms.has(perms, OriginPerms.PRIVATE)) {
 				ctx.warn(err_no_private);
 				return COMMAND_PERM_ERROR;
 			}
 		} else if (origin == ContextOrigin.SERVER) { // server context
-			if (!OriginPerms.has(perms, OriginPerms.PERM_SERVER)) {
+			if (!OriginPerms.has(perms, OriginPerms.SERVER)) {
 				ctx.warn(err_no_server);
 				return COMMAND_PERM_ERROR;
 			}
@@ -163,10 +168,11 @@ public final class Commands {
 		}
 
 		AbstractCommandHandler handler = commands.get(path[0]);
-		if (handler instanceof GroupedCommandHandler)
+		if (handler instanceof GroupedCommandHandler) {
 			return findCommand((GroupedCommandHandler) handler, path, 1);
-		else
+		} else {
 			return null;
+		}
 	}
 
 	private static AbstractCommandHandler findCommand(GroupedCommandHandler handler, String[] path, int cur) {
@@ -195,10 +201,11 @@ public final class Commands {
 	private static GroupedCommandHandler findCommandGroup(String path) {
 		AbstractCommandHandler handler = findCommand(path);
 
-		if (handler instanceof GroupedCommandHandler)
+		if (handler instanceof GroupedCommandHandler) {
 			return (GroupedCommandHandler) handler;
-		else
+		} else {
 			return null;
+		}
 	}
 	
 	/**
@@ -208,11 +215,11 @@ public final class Commands {
 	 * 
 	 * @param path        The group path
 	 * @param description The group description
-	 * @see #registerCommandGroup(String, String, String) registerCommandGroup(String path, String description, String allowFrom)
+	 * @see #registerCommandGroup(String, String, byte) registerCommandGroup(String path, String description, String allowFrom)
 	 */
 	@SuppressWarnings("unused")
 	public static void registerCommandGroup(String path, String description) {
-		registerCommandGroup(path, description, "private/server");
+		registerCommandGroup(path, description, (byte) (OriginPerms.PRIVATE | OriginPerms.SERVER));
 	}
 	
 	/**
@@ -222,7 +229,7 @@ public final class Commands {
 	 * @param description The group description
 	 * @param allowFrom   The group origin permissions
 	 */
-	public static void registerCommandGroup(String path, String description, String allowFrom) {
+	public static void registerCommandGroup(String path, String description, byte allowFrom) {
 		String[] split = SFUtils.splitLastIndexOf(path, ".", true);
 		GroupedCommandHandler group = new GroupedCommandHandler(split[split.length - 1], description, allowFrom);
 
@@ -279,7 +286,7 @@ public final class Commands {
 
 		Arrays.stream(mhs).filter(m -> (m.isAnnotationPresent(ASFConfig.class) && Modifier.isStatic(m.getModifiers()))).forEach(m -> {
 			String label = m.getAnnotation(ASFConfig.class).label();
-			Config cfg = ConfigHandler.queryConfig(label);
+			Config cfg = SFConfig.queryConfig(label);
 
 			try {
 				m.invoke(null, cfg);
@@ -322,7 +329,7 @@ public final class Commands {
 		// parse and register permissions
 		String[] perms = null;
 		if (!a.permissions().isEmpty()) {
-			perms = a.permissions().split(",\\s*");
+			perms = PERM_SPLIT.split(a.permissions());
 			for (int t = 0; t < perms.length; t++) {
 				switch (Permissions.register(perms[t])) {
 					case 2:
@@ -384,11 +391,13 @@ public final class Commands {
 	 */
 	private static void checkCommandInternal(AbstractCommandHandler handler) {
 		if (handler instanceof GroupedCommandHandler) {
-			for (AbstractCommandHandler subHandler : ((GroupedCommandHandler) handler).subCommands.values())
+			for (AbstractCommandHandler subHandler : ((GroupedCommandHandler) handler).subCommands.values()) {
 				checkCommandInternal(subHandler);
+			}
 		} else {
-			if (!OriginPerms.isAccessible(handler.basePerms))
+			if (!OriginPerms.isAccessible(handler.originPerms)) {
 				logger.warn("The command \"" + handler.name + "\" is not accessible, add more perms");
+			}
 		}
 	}
 

@@ -1,13 +1,17 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
-import net.dv8tion.jda.core.EmbedBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectReader;
+import com.fasterxml.jackson.databind.ObjectWriter;
+import net.dv8tion.jda.api.EmbedBuilder;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.*;
 
@@ -17,10 +21,39 @@ public class SFUtils {
 	private SFUtils() {
 	}
 	
+	public static final ObjectReader JSONReader;
+	public static final ObjectWriter JSONWriter;
+	public static final ObjectWriter IndentedJSONWriter;
+	public static final ObjectMapper mapper;
+	
+	static {
+		mapper = new ObjectMapper();
+		JSONReader = mapper.reader();
+		JSONWriter = mapper.writer();
+		IndentedJSONWriter = mapper.writerWithDefaultPrettyPrinter();
+	}
+	
+	/**
+	 * Parse a JSON String to a JsonNode
+	 * @param json The JSON string
+	 * @return The created JsonNode
+	 * @throws JsonProcessingException
+	 */
+	public static JsonNode parseJSON(String json) throws JsonProcessingException {
+		return JSONReader.readTree(json);
+	}
+	
 	/**
 	 * Redeclared here because {@link EmbedBuilder#ZERO_WIDTH_SPACE} is a String, not a char
 	 */
-	public static final char ZERO_WIDTH_SPACE = '​';
+	@SuppressWarnings("unused")
+	public static final char ZWS = '\u200B';
+	
+	/**
+	Non Breaking space
+	 */
+	@SuppressWarnings("unused")
+	public static final char NBSP = '\u00A0';
 	
 	/**
 	 * Split a string at the last occurence of the given separator
@@ -45,6 +78,7 @@ public class SFUtils {
 	 * @param value the sub-array to test for
 	 * @return the position of the sub-array in the source array
 	 */
+	@SuppressWarnings("unused")
 	public static int arrayIndexOf(char[] array, char[] value) {
 		return arrayIndexOf(array, value, 0, array.length);
 	}
@@ -57,6 +91,7 @@ public class SFUtils {
 	 * @param from  the index from where to start the research
 	 * @return the position of the sub-array in the source array
 	 */
+	@SuppressWarnings("unused")
 	public static int arrayIndexOf(char[] array, char[] value, int from) {
 		return arrayIndexOf(array, value, from, array.length);
 	}
@@ -117,6 +152,7 @@ public class SFUtils {
 	 * @param color The Color to convert
 	 * @return The hex code representation of the given color
 	 */
+	@SuppressWarnings("unused")
 	public static String colorToHex(Color color) {
 		return (color == null ? "null" : '#' + Integer.toHexString(color.getRGB()).substring(2).toUpperCase());
 	}
@@ -127,8 +163,9 @@ public class SFUtils {
 	 *
 	 * @param img The image to convert
 	 * @return The converted image
-	 * @throws IOException
+	 * @throws IOException If the conversion failed
 	 */
+	@SuppressWarnings("unused")
 	public static byte[] imgToByteArray(RenderedImage img) throws IOException {
 		return imgToByteArray(img, "png");
 	}
@@ -139,54 +176,22 @@ public class SFUtils {
 	 * @param img    The image to convert
 	 * @param format The format to use
 	 * @return The converted image
-	 * @throws IOException
+	 * @throws IOException If the conversion failed
 	 */
 	public static byte[] imgToByteArray(RenderedImage img, String format) throws IOException {
 		byte[] result;
 		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		
-		if (!ImageIO.write(img, format, baos))
+		if (!ImageIO.write(img, format, baos)) {
 			throw new IOException("ImageIO.write returned false");
+		}
 		
 		baos.flush();
 		result = baos.toByteArray();
 		baos.close();
 		
 		return result;
-	}
-	
-	/**
-	 * Return a ressource file located in /data/ inside the jar file as a String
-	 *
-	 * @param name The ressource name
-	 */
-	public static String getDataResourceAsString(String name) {
-		InputStream is = getDataRessource(name);
-		
-		try {
-			return new String(is.readAllBytes());
-		} catch (IOException e) {
-			return null;
-		}
-	}
-	
-	/**
-	 * Return an inputStream pointing to a ressource located in /data/ inside the jar file
-	 *
-	 * @param name The ressource name
-	 */
-	public static InputStream getDataRessource(String name) {
-		return getRessource("/data/" + name);
-	}
-	
-	/**
-	 * Return an inputStream pointing to a ressource inside the jar file
-	 *
-	 * @param name The ressource name
-	 */
-	public static InputStream getRessource(String name) {
-		return SFUtils.class.getResourceAsStream(name);
 	}
 	
 	/**
@@ -210,86 +215,81 @@ public class SFUtils {
 	 * @return The formatted String
 	 */
 	public static String snapFormat(String[] strs, int maxColSize, int spacing) {
+		StringBuilder sb = new StringBuilder(strs.length * 8);
+		int end = strs.length - 1;
+		
 		// only one column
 		if (strs.length <= maxColSize) {
-			int end = strs.length - 1;
-			StringBuilder sb = new StringBuilder(strs.length << 2);
-			
 			for (int t = 0; t < end; t++) {
 				sb.append(strs[t]);
 				sb.append('\n');
 			}
 			
 			sb.append(strs[end]);
-			return sb.toString();
-		}
-		
-		// multiples columns
-		int lastCol = strs.length % maxColSize;
-		if (lastCol == 0) {
-			lastCol = maxColSize;
-		}
-		
-		// init padding
-		int maxPad = 0;
-		for (int t = 0; t < strs.length; t++) {
-			if (strs[t].length() > maxPad) {
-				maxPad = strs[t].length();
-			}
-		}
-		
-		char[] pad = new char[(maxPad + spacing) * 2];
-		for (int t = 0; t < pad.length; t += 2) {
-			pad[t] = ' ';
-			pad[t + 1] = ZERO_WIDTH_SPACE;
-		}
-		
-		// init lines builders
-		StringBuilder[] lines = new StringBuilder[maxColSize];
-		for (int t = 0; t < lines.length; t++) {
-			lines[t] = new StringBuilder(maxPad * (strs.length / maxColSize));
-		}
-		
-		// compute lines
-		for (int t = 0; t < strs.length - lastCol; t += maxColSize) {
-			int padding = 0;
-			int end = t + maxColSize;
 			
-			for (int u = t; u < end; u++) {
-				if (strs[u].length() > padding) {
-					padding = strs[u].length();
+		} else {// multiples columns
+			// calculate columns size
+			int colnb = ceilDiv(strs.length, maxColSize);
+			int lastCol = strs.length % maxColSize;
+			if (lastCol == 0) {
+				lastCol = maxColSize;
+			}
+			
+			int maxPad = 0, maxTailPad = 0, lastColIndex = strs.length - lastCol, t, u, tmp;
+			
+			// calculate padding size
+			for(t = 0; t < lastColIndex; t++) {
+				tmp = strs[t].length();
+				if(tmp > maxPad) {
+					maxPad = tmp;
 				}
 			}
 			
-			padding += spacing;
-			
-			int index, curPad;
-			for (int u = t; u < end; u++) {
-				index = u % maxColSize;
-				curPad = padding - strs[u].length();
-				
-				lines[index].append(strs[u]);
-				
-				if (curPad > 0) {
-					lines[index].append(pad, 0, curPad * 2);
+			for(t = lastColIndex; t < strs.length; t++) {
+				tmp = strs[t].length();
+				if(tmp > maxTailPad) {
+					maxTailPad = tmp;
 				}
+			}
+			
+			maxPad += spacing;
+			maxTailPad += spacing;
+			
+			// build padding
+			char[] pad = new char[Math.max(maxPad, maxTailPad)];
+			Arrays.fill(pad, NBSP);
+			
+			// build columns
+			for(u = 0; u < maxColSize; u++) {
+				for (t = 0; t < colnb - 1; t++) {
+					tmp = t * maxColSize + u;
+					sb.append(strs[tmp]);
+					sb.append(pad, 0,maxPad - strs[tmp].length());
+				}
+				
+				if(u < lastCol) {
+					tmp = t * maxColSize + u;
+					sb.append(strs[tmp]);
+					sb.append(pad, 0,maxTailPad - strs[tmp].length());
+				}
+				
+				if(u < maxColSize - 1) {
+					sb.append('\n');
+				}
+			}
+			
+			sb.append(pad, 0,spacing + 1);
+			if(lastCol != maxColSize) {
+				sb.append(pad, 0, maxTailPad);
 			}
 		}
 		
-		// add last column
-		for (int t = strs.length - lastCol; t < strs.length; t++) {
-			lines[t % maxColSize].append(strs[t]);
-		}
 		
-		// build final string
-		StringBuilder sb = new StringBuilder(64);
-		for (int t = 0; t < lines.length - 1; t++) {
-			sb.append(lines[t]);
-			sb.append('\n');
-		}
-		
-		sb.append(lines[lines.length - 1]);
 		return sb.toString();
+	}
+	
+	public static int ceilDiv(int x, int y){
+		return -Math.floorDiv(-x,y);
 	}
 	
 	/**
@@ -299,11 +299,17 @@ public class SFUtils {
 	 * @return A string
 	 */
 	public static String monospace(String str) {
-		StringBuilder sb = new StringBuilder(str.length() + 7);
-		sb.append("```\n");
-		sb.append(str);
-		sb.append("```");
-		return sb.toString();
+		return ("```\n" + str + "```");
+	}
+	
+	/**
+	 * Add ``` chars at the begining and the end of the string without a linebreak
+	 *
+	 * @param str The string
+	 * @return A string
+	 */
+	public static String monospaceNB(String str) {
+		return ("```" + str + "```");
 	}
 	
 	/**

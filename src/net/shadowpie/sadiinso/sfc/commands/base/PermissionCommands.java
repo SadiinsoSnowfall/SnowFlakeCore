@@ -1,14 +1,15 @@
 package net.shadowpie.sadiinso.sfc.commands.base;
 
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.entities.Guild;
-import net.dv8tion.jda.core.entities.Member;
-import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Member;
+import net.dv8tion.jda.api.entities.Role;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommandHelper;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
+import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.permissions.Permissions;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 
@@ -20,7 +21,7 @@ public class PermissionCommands {
 	
 	@SFCommandHelper()
 	public static void init() {
-		Commands.registerCommandGroup("perms", "Gestion des permissions", "server");
+		Commands.registerCommandGroup("perms", "Gestion des permissions", OriginPerms.SERVER);
 	}
 	
 	/**
@@ -84,7 +85,7 @@ public class PermissionCommands {
 			name = "list",
 			usage = "<user|role>",
 			description = "Affiche la liste des permissions de l'utilisateur",
-			allowFrom = "server",
+			allowFrom = OriginPerms.SERVER,
 			parentGroup = "perms"
 	)
 	public static void onPermList(CommandContext ctx) {
@@ -104,7 +105,7 @@ public class PermissionCommands {
 			builder.setThumbnail(member.getUser().getAvatarUrl());
 			builder.setFooter("User ID : " + member.getUser().getId(), null);
 			
-			if (member.getUser().getIdLong() == ConfigHandler.owner_lid()) {
+			if (member.getUser().getIdLong() == SFConfig.owner_lid()) {
 				builder.addField(":cat::bread:", "", false);
 			} else if (member.isOwner()) {
 				builder.addField("Permissions spécifiques : ", "*", false);
@@ -159,7 +160,7 @@ public class PermissionCommands {
 			name = "grant",
 			usage = "<user|role> <perm> [<perm2>...]",
 			description = "Ajoute des permissions à l'utilisateur",
-			allowFrom = "server",
+			allowFrom = OriginPerms.SERVER,
 			parentGroup = "perms",
 			permissions = "perms.grant"
 	)
@@ -199,7 +200,14 @@ public class PermissionCommands {
 			ctx.info("Opération effectuée, aucune permission mise à jour");
 	}
 	
-	@SFCommand(name = "revoke", usage = "<user|role> <perm> [<perm2>...]", description = "Retire des permissions à l'utilisateur ciblé", allowFrom = "server", parentGroup = "perms", permissions = "perms.revoke")
+	@SFCommand(
+			name = "revoke",
+			usage = "<user|role> <perm> [<perm2>...]",
+			description = "Retire des permissions à l'utilisateur ciblé",
+			allowFrom = OriginPerms.SERVER,
+			parentGroup = "perms",
+			permissions = "perms.revoke"
+	)
 	public static void onPermRemove(CommandContext ctx) {
 		Object target = getTarget(ctx, 2);
 		if (target == null)
@@ -236,7 +244,13 @@ public class PermissionCommands {
 			ctx.info("Opération effectuée, aucune permission mise à jour");
 	}
 	
-	@SFCommand(name = "test", usage = "<user|role> <perm>", description = "Vérifie si l'utilisateur dispose de la permission donnée", allowFrom = "server", parentGroup = "perms")
+	@SFCommand(
+			name = "test",
+			usage = "<user|role> <perm>",
+			description = "Vérifie si l'utilisateur dispose de la permission donnée",
+			allowFrom = OriginPerms.SERVER,
+			parentGroup = "perms"
+	)
 	public static void onPermTest(CommandContext ctx) {
 		Object target = getTarget(ctx, 2);
 		if (target == null)

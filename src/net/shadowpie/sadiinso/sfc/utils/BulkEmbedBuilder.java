@@ -1,8 +1,8 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
-import net.dv8tion.jda.core.entities.MessageChannel;
-import net.dv8tion.jda.core.entities.MessageEmbed;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.dv8tion.jda.api.entities.MessageChannel;
+import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 
 import java.awt.*;
 import java.util.LinkedList;
@@ -10,7 +10,7 @@ import java.util.List;
 
 public class BulkEmbedBuilder {
 
-	public static final int MAX_CHARS_PER_EMBED = 1024;
+	private static final int MAX_CHARS_PER_EMBED = 1024;
 
 	private final String title;
 	private final Color color;
@@ -20,7 +20,7 @@ public class BulkEmbedBuilder {
 	private List<MessageEmbed> cache = null;
 
 	public BulkEmbedBuilder(String title) {
-		this(title, ConfigHandler.color_theme());
+		this(title, SFConfig.color_theme());
 	}
 	
 	public BulkEmbedBuilder(String title, Color color) {

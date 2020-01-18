@@ -1,8 +1,7 @@
 package net.shadowpie.sadiinso.sfc.commands.context;
 
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.entities.MessageEmbed.Field;
-import net.dv8tion.jda.core.utils.JDALogger;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.internal.utils.JDALogger;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -110,8 +109,9 @@ public class ConsoleCommandContext extends CommandContext {
 
 	@Override
 	public void reply(MessageEmbed embed) {
-		for(Field field : embed.getFields())
+		for(MessageEmbed.Field field : embed.getFields()) {
 			System.out.println(field.getName() + " : " + field.getValue());
+		}
 	}
 
 	@Override

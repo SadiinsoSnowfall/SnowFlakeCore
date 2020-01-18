@@ -1,6 +1,6 @@
 package net.shadowpie.sadiinso.sfc.permissions;
 
-import net.dv8tion.jda.core.utils.JDALogger;
+import net.dv8tion.jda.internal.utils.JDALogger;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
 import org.slf4j.Logger;
 
@@ -10,47 +10,11 @@ public final class OriginPerms {
 	
 	private static final Logger logger = JDALogger.getLog("Command");
 	
-	public static final byte PERM_CONSOLE = 1;
-	public static final byte PERM_PRIVATE = 2;
-	public static final byte PERM_SERVER  = 4;
-	public static final byte PERM_OWNER_ONLY = 8;
-	public static final byte PERM_ALL = PERM_CONSOLE | PERM_PRIVATE | PERM_SERVER;
-	
-	public static byte compute(String config) {
-		String[] split = config.split("/");
-		byte val = 0;
-		
-		for(String str : split) {
-			if(str.isEmpty()) continue;
-			str = str.toLowerCase();
-			switch(str) {
-				case "console":
-					val |= PERM_CONSOLE;
-					break;
-					
-				case "private":
-					val |= PERM_PRIVATE;
-					break;
-				
-				case "server":
-					val |= PERM_SERVER;
-					break;
-				
-				case "all":
-					val |= PERM_ALL;
-					break;
-					
-				case "owneronly":
-					val |= PERM_OWNER_ONLY;
-					break;
-					
-				default:
-					logger.warn("Ignoring unknown permission property : \"" + str + "\"");
-			}
-		}
-		
-		return val;
-	}
+	public static final byte CONSOLE = 1;
+	public static final byte PRIVATE = 2;
+	public static final byte SERVER  = 4;
+	public static final byte OWNER_ONLY = 8;
+	public static final byte ALL = CONSOLE | PRIVATE | SERVER;
 	
 	/**
 	 * ContextOrigin to OriginPermission
@@ -59,13 +23,13 @@ public final class OriginPerms {
 	public static byte CO2OP(ContextOrigin co) {
 		switch(co) {
 			case CONSOLE:
-				return PERM_CONSOLE;
+				return CONSOLE;
 			
 			case PRIVATE:
-				return PERM_PRIVATE;
+				return PRIVATE;
 				
 			case SERVER:
-				return PERM_SERVER;
+				return SERVER;
 				
 			default: // unknown perm
 				return 0;
@@ -77,7 +41,7 @@ public final class OriginPerms {
 	 * @param perms The command permissions container
 	 */
 	public static boolean isAccessible(byte perms) {
-		return (((perms & PERM_CONSOLE) > 0) || ((perms & PERM_PRIVATE) > 0) || ((perms & PERM_SERVER) > 0));
+		return (((perms & CONSOLE) > 0) || ((perms & PRIVATE) > 0) || ((perms & SERVER) > 0));
 	}
 	
 	/**

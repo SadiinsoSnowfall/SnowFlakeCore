@@ -1,6 +1,6 @@
 package net.shadowpie.sadiinso.sfc.listeners.filter;
 
-import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.api.entities.Message;
 
 public interface AbstractFilter {
 
@@ -9,6 +9,6 @@ public interface AbstractFilter {
 	 * @param event The received message
 	 * @return false to drop the message else true
 	 */
-	public boolean applyFilter(Message event);
+	boolean applyFilter(Message event);
 	
 }

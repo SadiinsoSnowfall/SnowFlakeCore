@@ -1,5 +1,8 @@
 package net.shadowpie.sadiinso.sfc.commands.declaration;
 
+import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
+import org.apache.commons.lang3.StringUtils;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -25,7 +28,7 @@ public @interface SFCommand {
 	 * <br>
 	 * A command name should contain only lowercases latin letters
 	 */
-	String alias() default "";
+	String alias() default StringUtils.EMPTY;
 	
 	/**
 	 * Apply a filter to the command origin consisting of the followings strings :
@@ -38,24 +41,24 @@ public @interface SFCommand {
 	 * </ul>
 	 * Set to "private/server" by default
 	 */
-	String allowFrom() default "private/server";
+	byte allowFrom() default OriginPerms.PRIVATE | OriginPerms.SERVER;
 	
 	/**
 	 * Set the description of the command (display in the "help" base command)
 	 */
-	String description() default "";
+	String description() default StringUtils.EMPTY;
 	
 	/**
 	 * Set the usage hint of the command
 	 * <br>
 	 * exemple : <strong>&lt;required_arg&gt; [optional_arg]</strong>
 	 */
-	String usage() default "";
+	String usage() default StringUtils.EMPTY;
 	
 	/**
 	 * Set the parent group of the command
 	 */
-	String parentGroup() default "";
+	String parentGroup() default StringUtils.EMPTY;
 	
 	/**
 	 * Set the permissions required in order to run this command (separated by commas)
@@ -66,5 +69,5 @@ public @interface SFCommand {
 	 * <br>
 	 * exemple : <strong>permgroup.perm</strong>
 	 */
-	String permissions() default "";
+	String permissions() default StringUtils.EMPTY;
 }

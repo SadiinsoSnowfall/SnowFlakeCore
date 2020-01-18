@@ -1,6 +1,6 @@
 package net.shadowpie.sadiinso.sfc.webapi;
 
-import org.json.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
@@ -15,7 +15,7 @@ public class WebEndpointHandler {
 
 	@FunctionalInterface
 	public interface WebEventCaller {
-		public JSONObject execute(JSONObject data);
+		JsonNode execute(JsonNode data);
 	}
 	
 	public static WebEventCaller createHandler(Method m) throws Throwable {

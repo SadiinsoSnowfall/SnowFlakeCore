@@ -3,7 +3,7 @@ package net.shadowpie.sadiinso.sfc.listeners;
 import net.shadowpie.sadiinso.sfc.commands.Commands;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ConsoleCommandContext;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 
 import java.util.Scanner;
 
@@ -19,7 +19,7 @@ public final class ConsoleListener {
 			return;
 		}
 
-		SLEEP_TIME = ConfigHandler.sfConfig.getInt("console_listener_sleep_ms", 250);
+		SLEEP_TIME = SFConfig.sfConfig.getInt("console_listener_sleep_ms", 250);
 		
 		consoleTh = new Thread(() -> {
 			Scanner sc = new Scanner(System.in);

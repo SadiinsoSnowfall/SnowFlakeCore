@@ -1,10 +1,9 @@
 package net.shadowpie.sadiinso.sfc.utils;
 
-import net.dv8tion.jda.core.EmbedBuilder;
-import net.dv8tion.jda.core.MessageBuilder;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.requests.restaction.MessageAction;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.requests.restaction.MessageAction;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 
 import java.awt.*;
@@ -19,7 +18,7 @@ public class JdaUtils {
 	public static final String EMOJI_DENY = "❌";
 	
 	public static EmbedBuilder getEmbedBuilder() {
-		return getEmbedBuilder(null, ConfigHandler.color_theme());
+		return getEmbedBuilder(null, SFConfig.color_theme());
 	}
 	
 	public static EmbedBuilder getEmbedBuilder(Color color) {
@@ -27,25 +26,26 @@ public class JdaUtils {
 	}
 	
 	public static EmbedBuilder getEmbedBuilder(String title) {
-		return getEmbedBuilder(title, ConfigHandler.color_theme());
+		return getEmbedBuilder(title, SFConfig.color_theme());
 	}
 	
 	public static EmbedBuilder getEmbedBuilder(String title, Color color) {
 		EmbedBuilder builder = new EmbedBuilder();
 
-		if ((title != null) && !title.isEmpty())
+		if ((title != null) && !title.isEmpty()) {
 			builder.setTitle(title);
+		}
 
 		builder.setColor(color);
 		return builder;
 	}
 
 	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence message) {
-		return sendAsEmbed(channel, message, null, null, ConfigHandler.color_theme());
+		return sendAsEmbed(channel, message, null, null, SFConfig.color_theme());
 	}
 
 	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence title, CharSequence sub) {
-		return sendAsEmbed(channel, title, sub, null, ConfigHandler.color_theme());
+		return sendAsEmbed(channel, title, sub, null, SFConfig.color_theme());
 	}
 
 	public static MessageEmbed sendAsEmbed(MessageChannel channel, CharSequence message, Color color) {
@@ -108,11 +108,14 @@ public class JdaUtils {
 		MessageAction action = user.openPrivateChannel().complete().sendMessage(message);
 		
 		try {
-			if(instant)
+			if(instant) {
 				return action.complete().getIdLong();
-			else
+			} else {
 				action.queue();
-		} catch(Exception ignored) {}
+			}
+		} catch(Exception ignored) {
+			return -1L;
+		}
 		
 		return 0L;
 	}
@@ -131,11 +134,14 @@ public class JdaUtils {
 		MessageAction action = user.openPrivateChannel().complete().sendMessage(message);
 		
 		try {
-			if(instant)
+			if(instant) {
 				return action.complete().getIdLong();
-			else
+			} else{
 				action.queue();
-		} catch(Exception ignored) {}
+			}
+		} catch(Exception ignored) {
+			return -1L;
+		}
 		
 		return 0L;
 	}
@@ -158,14 +164,17 @@ public class JdaUtils {
 	 * @param instant Whether or not to perform the action immediately
 	 */
 	public static long sendPrivate(User user, String message, File file, boolean instant) {
-		MessageAction action = user.openPrivateChannel().complete().sendFile(file, new MessageBuilder().append(message).build());
+		MessageAction action = user.openPrivateChannel().complete().sendMessage(message).addFile(file);
 		
 		try {
-			if(instant)
+			if(instant) {
 				return action.complete().getIdLong();
-			else
+			} else {
 				action.queue();
-		} catch(Exception ignored) {}
+			}
+		} catch(Exception ignored) {
+			return -1L;
+		}
 		
 		return 0L;
 	}
@@ -192,7 +201,7 @@ public class JdaUtils {
 	 * @return true if the user is the bot owner else false
 	 */
 	public static boolean isBotOwner(User user) {
-		return (user.getId().equals(ConfigHandler.owner_sid()));
+		return (user.getId().equals(SFConfig.owner_sid()));
 	}
 	
 	/**
@@ -201,7 +210,7 @@ public class JdaUtils {
 	 * @return true if the member is the bot owner else false
 	 */
 	public static boolean isBotOwner(Member member) {
-		return (member.getUser().getId().equals(ConfigHandler.owner_sid()));
+		return (member.getUser().getId().equals(SFConfig.owner_sid()));
 	}
 	
 	/**
@@ -212,8 +221,9 @@ public class JdaUtils {
 	 */
 	public static Member getMember(long serverid, long userid) {
 		Guild guild = SFC.getJDA().getGuildById(serverid);
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		return guild.getMemberById(userid);
 	}
@@ -226,8 +236,9 @@ public class JdaUtils {
 	 */
 	public static Member getMember(String serverid, String userid) {
 		Guild guild = SFC.getJDA().getGuildById(serverid);
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		return guild.getMemberById(userid);
 	}
@@ -240,8 +251,9 @@ public class JdaUtils {
 	 */
 	public static Role getRole(long serverid, long roleid) {
 		Guild guild = SFC.getJDA().getGuildById(serverid);
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		return guild.getRoleById(roleid);
 	}
@@ -254,8 +266,9 @@ public class JdaUtils {
 	 */
 	public static Role getRole(String serverid, String roleid) {
 		Guild guild = SFC.getJDA().getGuildById(serverid);
-		if(guild == null)
+		if(guild == null) {
 			return null;
+		}
 		
 		return guild.getRoleById(roleid);
 	}

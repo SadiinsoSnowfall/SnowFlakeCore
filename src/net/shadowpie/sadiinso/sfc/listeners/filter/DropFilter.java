@@ -1,6 +1,6 @@
 package net.shadowpie.sadiinso.sfc.listeners.filter;
 
-import net.dv8tion.jda.core.entities.Message;
+import net.dv8tion.jda.api.entities.Message;
 
 /**
  * Filter that drop all messages

@@ -1,17 +1,18 @@
 package net.shadowpie.sadiinso.sfc.config;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import net.shadowpie.sadiinso.sfc.utils.SFUtils;
 import org.apache.commons.io.FileUtils;
-import org.json.ordered.JSONException;
-import org.json.ordered.OrderedJSONObject;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
-public class ConfigHandler {
+public class SFConfig {
 
-	private static OrderedJSONObject root;
+	private static ObjectNode root;
 	private static boolean needrw;
 	private static String path;
 	
@@ -92,9 +93,10 @@ public class ConfigHandler {
 		needrw = false;
 		
 		try {
-			root = new OrderedJSONObject(FileUtils.readFileToString(new File(configPath), "utf-8"));
+			String json = FileUtils.readFileToString(new File(configPath), "utf-8");
+			root = (ObjectNode) SFUtils.parseJSON(json);
 		} catch (Exception e) {
-			root = new OrderedJSONObject();
+			root = SFUtils.mapper.createObjectNode();
 			needrw = true;
 		}
 		
@@ -134,7 +136,7 @@ public class ConfigHandler {
 	
 	public static boolean rewrite() {
 		try (FileWriter w = new FileWriter(new File(path))) {
-			root.write(w, 4, 0);
+			SFUtils.IndentedJSONWriter.writeValue(w, root);
 		} catch (IOException e) {
 			return false;
 		}
@@ -153,21 +155,15 @@ public class ConfigHandler {
 	 * Return the configuration handle for the specified label
 	 */
 	public static Config queryConfig(String label) {
-		OrderedJSONObject config = null;
-		
-		try {
-			config = root.getJSONObject(label);
-		} catch (JSONException ignored) {}
-		
-		return new Config(label, config);
+		return new Config(label, (ObjectNode) root.get(label));
 	}
 	
 	public static class Config {
 		private final String label;
-		private OrderedJSONObject json;
+		private ObjectNode json;
 		private boolean needrw;
 		
-		private Config(String label, OrderedJSONObject json) {
+		private Config(String label, ObjectNode json) {
 			this.label = label;
 			this.json = json;
 			this.needrw = false;
@@ -185,105 +181,129 @@ public class ConfigHandler {
 			return needrw;
 		}
 		
-		private boolean setField(String name, Object defaultValue, Class<?> cast) {
+		private void createIfNeeded(String name) {
 			if(json == null) {
-				json = new OrderedJSONObject();
-				root.put(label, json);
+				json = SFUtils.mapper.createObjectNode();
+				root.set(label, json);
 			}
-			
-			Object var;
-			
-			try {
-				var = json.get(name);
-			} catch(JSONException e) {
-				json.put(name, defaultValue);
-				return (ConfigHandler.needrw = needrw = true);
-			}
-			
-			if(!cast.isInstance(var)) {
-				json.put(name, defaultValue);
-				return (ConfigHandler.needrw = needrw = true);
-			}
-			
-			return false;
 		}
 		
 		public boolean setField(String name, String defaultValue) {
-			return setField(name, defaultValue, defaultValue.getClass());
+			createIfNeeded(name);
+			JsonNode node = json.get(name);
+			
+			if ((node == null) || !node.isTextual()) {
+				json.put(name, defaultValue);
+				return (SFConfig.needrw = needrw = true);
+			} else {
+				return true;
+			}
 		}
 		
 		public boolean setField(String name, Boolean defaultValue) {
-			return setField(name, defaultValue, defaultValue.getClass());
+			createIfNeeded(name);
+			JsonNode node = json.get(name);
+			
+			if ((node == null) || !node.isBoolean()) {
+				json.put(name, defaultValue);
+				return (SFConfig.needrw = needrw = true);
+			} else {
+				return true;
+			}
 		}
 		
 		public boolean setField(String name, Integer defaultValue) {
-			return setField(name, defaultValue, defaultValue.getClass());
+			createIfNeeded(name);
+			JsonNode node = json.get(name);
+			
+			if ((node == null) || !node.isInt()) {
+				json.put(name, defaultValue);
+				return (SFConfig.needrw = needrw = true);
+			} else {
+				return true;
+			}
 		}
 		
 		public boolean setField(String name, Long defaultValue) {
-			return setField(name, defaultValue, defaultValue.getClass());
+			createIfNeeded(name);
+			JsonNode node = json.get(name);
+			
+			if ((node == null) || !node.isLong()) {
+				json.put(name, defaultValue);
+				return (SFConfig.needrw = needrw = true);
+			} else {
+				return true;
+			}
 		}
 		
 		public boolean setField(String name, Double defaultValue) {
-			return setField(name, defaultValue, defaultValue.getClass());
+			createIfNeeded(name);
+			JsonNode node = json.get(name);
+			
+			if ((node == null) || !node.isDouble()) {
+				json.put(name, defaultValue);
+				return (SFConfig.needrw = needrw = true);
+			} else {
+				return true;
+			}
 		}
 		
 		public String getString(String key) {
-			return json.getString(key);
+			return json.get(key).asText();
 		}
 		
 		public String getString(String key, String fallback) {
-			try {
-				return json.getString(key);
-			} catch(JSONException e) {
+			if (json.has(key)) {
+				return json.get(key).asText();
+			} else {
 				return fallback;
 			}
 		}
 		
 		public boolean getBool(String key) {
-			return json.getBoolean(key);
+			return json.get(key).asBoolean();
 		}
 		
 		public boolean getBool(String key, boolean fallback) {
-			try {
-				return json.getBoolean(key);
-			} catch(JSONException e) {
+			if (json.has(key)) {
+				return json.get(key).asBoolean();
+			} else {
 				return fallback;
 			}
 		}
 		
 		public int getInt(String key) {
-			return json.getInt(key);
+			return json.get(key).asInt();
 		}
 		
 		public int getInt(String key, int fallback) {
-			try {
-				return json.getInt(key);
-			} catch(JSONException e) {
+			if (json.has(key)) {
+				return json.get(key).asInt();
+			} else {
 				return fallback;
 			}
 		}
 		
 		public long getLong(String key) {
-			return json.getLong(key);
+			return json.get(key).asLong();
 		}
 		
 		public long getLong(String key, long fallback) {
-			try {
-				return json.getLong(key);
-			} catch(JSONException e) {
+			if (json.has(key)) {
+				return json.get(key).asLong();
+			} else {
 				return fallback;
 			}
 		}
 		
 		public double getDouble(String key) {
-			return json.getDouble(key);
+			return json.get(key).asDouble();
 		}
 		
 		public double getDouble(String key, double fallback) {
-			try {
-				return json.getDouble(key);
-			} catch(JSONException e) {
+			if (json.has(key)) {
+				return json.get(key).asDouble();
+			} else {
 				return fallback;
 			}
 		}

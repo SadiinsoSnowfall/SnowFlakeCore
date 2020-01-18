@@ -1,11 +1,12 @@
 package net.shadowpie.sadiinso.sfc.commands.base;
 
-import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.api.entities.Guild;
 import net.shadowpie.sadiinso.sfc.commands.context.CommandContext;
 import net.shadowpie.sadiinso.sfc.commands.context.ContextOrigin;
 import net.shadowpie.sadiinso.sfc.commands.declaration.SFCommand;
-import net.shadowpie.sadiinso.sfc.config.ConfigHandler;
+import net.shadowpie.sadiinso.sfc.config.SFConfig;
 import net.shadowpie.sadiinso.sfc.listeners.eventwaiter.ButtonMenu;
+import net.shadowpie.sadiinso.sfc.permissions.OriginPerms;
 import net.shadowpie.sadiinso.sfc.sfc.SFC;
 import net.shadowpie.sadiinso.sfc.utils.JdaUtils;
 import net.shadowpie.sadiinso.sfc.utils.SFUtils;
@@ -16,7 +17,11 @@ import java.util.concurrent.TimeUnit;
 
 public class BaseCommands {
 
-	@SFCommand(name = "stop", description = "stop the bot", allowFrom = "all/ownerOnly")
+	@SFCommand(
+			name = "stop",
+			description = "stop the bot",
+			allowFrom = OriginPerms.ALL | OriginPerms.OWNER_ONLY
+	)
 	public static void stop(CommandContext ctx) {
 		if (ctx.getOrigin() == ContextOrigin.CONSOLE) {
 			ctx.warn("Shutting down the bot...");
@@ -29,10 +34,14 @@ public class BaseCommands {
 			SFC.shutdown();
 		}).addChoice(JdaUtils.EMOJI_DENY, r -> {
 			ctx.warn("Shutdown canceled");
-		}).setTimeout(30, TimeUnit.SECONDS).build().display(ctx.getChannel(), "Shutting down", "Please confirm this operation", ConfigHandler.color_warn());
+		}).setTimeout(30, TimeUnit.SECONDS).build().display(ctx.getChannel(), "Shutting down", "Please confirm this operation", SFConfig.color_warn());
 	}
 
-	@SFCommand(name = "serverList", description = "print the list of all servers the bot is connected to", allowFrom = "all/ownerOnly")
+	@SFCommand(
+			name = "serverList",
+			description = "print the list of all servers the bot is connected to",
+			allowFrom = OriginPerms.ALL | OriginPerms.OWNER_ONLY
+	)
 	public static void onServerList(CommandContext ctx) {
 		StringBuilder sb = new StringBuilder(16);
 		List<Guild> guilds = SFC.getJDA().getGuilds();
